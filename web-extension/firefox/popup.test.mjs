@@ -107,10 +107,16 @@ test('shows API errors in the popup and allows retry', async () => {
 
 test('manifest permissions stay narrow and match the internal API origin', async () => {
   const manifest = JSON.parse(await readFile(new URL('./manifest.json', import.meta.url), 'utf8'));
+  const icon = await readFile(new URL('./icons/openlinklearn-icon.svg', import.meta.url), 'utf8');
+  const popup = await readFile(new URL('./popup.html', import.meta.url), 'utf8');
 
   assert.equal(manifest.manifest_version, 3);
   assert.equal(manifest.name, 'Open Link Learn: Save to backlog');
   assert.equal(manifest.action.default_title, 'Save page to Open Link Learn');
+  assert.equal(manifest.action.default_icon['48'], 'icons/openlinklearn-icon.svg');
+  assert.equal(manifest.icons['48'], 'icons/openlinklearn-icon.svg');
+  assert.match(popup, /src="icons\/openlinklearn-icon\.svg"/);
+  assert.equal(icon.includes('fill="#faf6f0"'), false);
   assert.ok(manifest.permissions.includes('activeTab'));
   assert.deepEqual(manifest.host_permissions, [`${new URL(API_BASE_URL).origin}/*`]);
   assert.equal(manifest.action.default_popup, 'popup.html');

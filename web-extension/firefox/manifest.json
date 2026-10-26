@@ -7,17 +7,17 @@
     "activeTab"
   ],
   "host_permissions": [
-    "http://localhost:8080/*"
+    "https://openlink.dcpdev.es/*"
   ],
   "action": {
     "default_title": "Save page to Open Link Learn",
     "default_popup": "popup.html",
     "default_icon": {
-      "48": "icons/openlinklearn.svg"
+      "48": "icons/openlinklearn-icon.svg"
     }
   },
   "icons": {
-    "48": "icons/openlinklearn.svg"
+    "48": "icons/openlinklearn-icon.svg"
   },
   "browser_specific_settings": {
     "gecko": {
