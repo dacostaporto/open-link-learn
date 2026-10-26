@@ -1,0 +1,89 @@
+<section class="backlog-page" [class.is-banner]="presentation() === 'banner'">
+  @if (presentation() === 'page') {
+    <header class="page-heading">
+      <div>
+        <p class="eyebrow">YOUR LIBRARY</p>
+        <h1>Backlog</h1>
+        <p class="heading-copy">Save a video or article for your next learning session.</p>
+      </div>
+      <span class="collection-mark" aria-hidden="true">01</span>
+    </header>
+  }
+
+  <section class="capture-panel window win-blue" aria-labelledby="capture-title">
+    <div class="capture-heading">
+      <p class="eyebrow">{{ presentation() === 'banner' ? 'SAVE FOR LATER' : 'QUICK CAPTURE' }}</p>
+      <h2 id="capture-title">{{ presentation() === 'banner' ? 'Add a link to your list.' : 'Add content' }}</h2>
+      @if (presentation() === 'banner') {
+        <p class="banner-copy">Videos, articles, hobbies, ideas. Keep what you want to come back to.</p>
+      }
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="field-group">
+        <label for="content-url">{{ presentation() === 'banner' ? 'Paste a link' : 'Video or article URL' }}</label>
+        <input
+          id="content-url"
+          type="url"
+          formControlName="url"
+          autocomplete="url"
+          inputmode="url"
+          [placeholder]="presentation() === 'banner' ? 'https://' : 'https://example.com/learn'"
+          [attr.aria-invalid]="form.controls.url.invalid && form.controls.url.touched"
+          [attr.aria-describedby]="form.controls.url.invalid && form.controls.url.touched ? 'url-error' : null"
+          (input)="clearMessages()"
+        />
+        @if (form.controls.url.hasError('required') && form.controls.url.touched) {
+          <p class="field-error" id="url-error">Enter a URL to save.</p>
+        } @else if (form.controls.url.hasError('httpUrl') && form.controls.url.touched) {
+          <p class="field-error" id="url-error">Enter a valid HTTP or HTTPS URL.</p>
+        }
+      </div>
+
+      @if (presentation() === 'page') {
+        <div class="field-group">
+          <label for="content-title">Title <span>(optional)</span></label>
+          <input
+            id="content-title"
+            type="text"
+            formControlName="title"
+            autocomplete="off"
+            placeholder="Add a title if you already know it"
+            (input)="clearMessages()"
+          />
+        </div>
+
+        <div class="field-group">
+          <label for="content-kind">Content type</label>
+          <select id="content-kind" formControlName="type" (change)="clearMessages()">
+            <option value="">Auto-detect</option>
+            <option value="YOUTUBE">YouTube</option>
+            <option value="ARTICLE">Article</option>
+          </select>
+        </div>
+      }
+
+      @if (errorMessage(); as message) {
+        <p class="form-message error-message" role="alert">{{ message }}</p>
+      }
+      @if (createdContent(); as content) {
+        <p class="form-message success-message" role="status">
+          Added <strong>{{ content.title }}</strong> to your backlog.
+        </p>
+      }
+
+      <div class="form-footer">
+        @if (presentation() === 'page') {
+          <p>Links are saved privately in your planner.</p>
+        }
+        <button type="submit" [disabled]="isSubmitting()">
+          @if (isSubmitting()) {
+            Saving...
+          } @else {
+            Add to backlog
+          }
+        </button>
+      </div>
+    </form>
+  </section>
+</section>

@@ -1,0 +1,68 @@
+<section class="archive-section" aria-labelledby="archive-title">
+  <header class="archive-heading">
+    <div>
+      <p class="eyebrow">COMPLETED</p>
+      <h1 id="archive-title">History</h1>
+    </div>
+    @if (result(); as page) {
+      <p class="item-count">{{ page.totalItems }} {{ page.totalItems === 1 ? 'item' : 'items' }}</p>
+    }
+  </header>
+
+  <form class="archive-search" (ngSubmit)="applySearch()">
+    <label for="archive-search">Search title or source
+      <input id="archive-search" type="search" [formControl]="searchControl" placeholder="Search completed content" />
+    </label>
+    <div class="search-actions">
+      <button class="search-button" type="submit" [disabled]="isLoading()">Search</button>
+      @if (searchControl.value) {
+        <button class="text-button" type="button" (click)="clearSearch()" [disabled]="isLoading()">Clear</button>
+      }
+    </div>
+  </form>
+
+  @if (isLoading() && !result()) {
+    <p class="list-state" role="status">Loading your history...</p>
+  } @else if (loadError(); as message) {
+    <div class="list-state error-state" role="alert">
+      <p>{{ message }}</p>
+      <button class="text-button" type="button" (click)="retry()">Retry</button>
+    </div>
+  } @else if (isLoading()) {
+    <p class="refresh-state" role="status">Updating history...</p>
+  } @else if (contentItems.length === 0) {
+    <div class="list-state empty-state">
+      <p class="empty-title">Nothing completed yet</p>
+      <p>Items you finish from your backlog will be saved here.</p>
+    </div>
+  } @else {
+    <ul class="content-list" aria-label="Completed content">
+      @for (item of contentItems; track item.id) {
+        <li class="content-row">
+          <span class="type-marker" [class.video-marker]="item.type === 'YOUTUBE'">
+            {{ item.type === 'YOUTUBE' ? 'VIDEO' : 'ARTICLE' }}
+          </span>
+          <div class="content-details">
+            <h3>{{ item.title }}</h3>
+            <p>{{ item.url }} <span aria-hidden="true">·</span>
+              Completed {{ item.completedAt ? formatDate(item.completedAt) : 'date unavailable' }}
+            </p>
+          </div>
+          <a class="open-link" [href]="item.url" target="_blank" rel="noopener noreferrer" [attr.aria-label]="'Open ' + item.title + ' in a new tab'">
+            Open <span aria-hidden="true">↗</span>
+          </a>
+        </li>
+      }
+    </ul>
+
+    @if (result(); as page) {
+      @if (page.totalPages > 1) {
+        <nav class="pagination" aria-label="History pages">
+          <button type="button" (click)="goToPage(page.page - 1)" [disabled]="page.page === 0 || isLoading()">Previous</button>
+          <span>Page {{ page.page + 1 }} of {{ page.totalPages }}</span>
+          <button type="button" (click)="goToPage(page.page + 1)" [disabled]="page.page + 1 >= page.totalPages || isLoading()">Next</button>
+        </nav>
+      }
+    }
+  }
+</section>

@@ -1,0 +1,205 @@
+<section class="calendar-page" aria-labelledby="calendar-title">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">MAKE ROOM TO LEARN</p>
+      <h1 id="calendar-title">Your calendar</h1>
+    </div>
+    <a class="series-link" routerLink="/calendar/series/new">Create weekly series</a>
+    @if (timezone(); as zone) {
+      <p class="timezone-label"><span aria-hidden="true"></span>{{ zone }}</p>
+    }
+  </header>
+
+  @if (settingsError(); as message) {
+    <div class="page-error" role="alert">
+      <p>{{ message }}</p>
+      <button type="button" (click)="retrySettings()">Retry</button>
+    </div>
+  }
+
+  @if (loadError(); as message) {
+    <div class="page-error" role="alert">
+      <p>{{ message }}</p>
+      <button type="button" (click)="retrySessions()">Retry</button>
+    </div>
+  }
+
+  @if (!timezone() && !settingsError()) {
+    <p class="calendar-state" role="status">Loading your planner...</p>
+  } @else if (timezone()) {
+    <div class="calendar-layout">
+      <section class="session-composer window win-blue" aria-labelledby="composer-title">
+        <div class="composer-heading">
+          <p class="eyebrow">ONE-OFF SESSION</p>
+          <h2 id="composer-title">{{ isReassigningContent() ? 'Reassign content' : isEditingSession() ? 'Edit study slot' : 'Make a study slot' }}</h2>
+        </div>
+
+        <form [formGroup]="sessionForm" (ngSubmit)="saveSession()">
+          @if (!isReassigningContent()) {
+            <div class="datetime-fields">
+              <div class="datetime-field">
+                <label for="session-date">Date</label>
+                <input
+                  id="session-date"
+                  type="date"
+                  formControlName="date"
+                  [attr.aria-invalid]="sessionForm.controls.date.invalid && sessionForm.controls.date.touched"
+                  [attr.aria-describedby]="sessionForm.controls.date.invalid && sessionForm.controls.date.touched ? 'session-date-error' : null"
+                />
+                @if (sessionForm.controls.date.hasError('required') && sessionForm.controls.date.touched) {
+                  <p class="field-note error-text" id="session-date-error" role="alert">Choose a date.</p>
+                }
+              </div>
+              <div class="datetime-field">
+                <label for="session-time">Starts at</label>
+                <input
+                  id="session-time"
+                  type="time"
+                  formControlName="time"
+                  [attr.aria-invalid]="sessionForm.controls.time.invalid && sessionForm.controls.time.touched"
+                  [attr.aria-describedby]="sessionForm.controls.time.invalid && sessionForm.controls.time.touched ? 'session-time-error' : null"
+                />
+                @if (sessionForm.controls.time.hasError('required') && sessionForm.controls.time.touched) {
+                  <p class="field-note error-text" id="session-time-error" role="alert">Choose a start time.</p>
+                }
+              </div>
+            </div>
+
+            <label for="session-duration">Duration</label>
+            <input
+              id="session-duration"
+              type="number"
+              min="1"
+              max="720"
+              step="1"
+              formControlName="durationMinutes"
+              [attr.aria-invalid]="sessionForm.controls.durationMinutes.invalid && sessionForm.controls.durationMinutes.touched"
+              [attr.aria-describedby]="sessionForm.controls.durationMinutes.invalid && sessionForm.controls.durationMinutes.touched ? 'session-duration-error' : null"
+            />
+            @if (sessionForm.controls.durationMinutes.invalid && sessionForm.controls.durationMinutes.touched) {
+              <p class="field-note error-text" id="session-duration-error" role="alert">Duration must be a whole number of minutes from 1 to 720.</p>
+            }
+          }
+
+          <label for="session-content">{{ isReassigningContent() ? 'Assign backlog item' : 'Backlog item' }} <span>Optional</span></label>
+          <select id="session-content" formControlName="contentItemId">
+            <option value="">{{ isReassigningContent() ? 'Remove assignment' : 'Leave unassigned' }}</option>
+            @if (isEditingSession() && selectedSession()?.content; as assignedContent) {
+              <option [value]="assignedContent.id">{{ assignedContent.title }}</option>
+            }
+            @for (item of pendingContent(); track item.id) {
+              @if (!isEditingSession() || item.id !== selectedSession()?.content?.id) {
+                <option [value]="item.id">{{ item.title }}</option>
+              }
+            }
+          </select>
+          @if (contentError(); as message) {
+            <p class="field-note error-text" role="alert">{{ message }}</p>
+          }
+
+          @if (!isEditingSession()) {
+            <div class="lead-time-fields">
+              <label for="session-reminder">Reminder lead time</label>
+              <div class="number-input"><input id="session-reminder" type="number" min="0" max="1440" formControlName="reminderMinutesBefore" /><span>min</span></div>
+              <label for="session-cutoff">Assignment cutoff</label>
+              <div class="number-input"><input id="session-cutoff" type="number" min="0" max="10080" formControlName="assignmentCutoffMinutesBefore" /><span>min</span></div>
+            </div>
+          }
+
+          @if (formError(); as message) {
+            <p class="field-note error-text" role="alert">{{ message }}</p>
+          }
+          @if (saveMessage(); as message) {
+            <p class="field-note success-text" role="status">{{ message }}</p>
+          }
+          <div class="form-actions">
+            <button class="submit-button" type="submit" [disabled]="isSaving() || !timezone()">
+              {{ isSaving() ? 'Saving...' : isReassigningContent() ? 'Save assignment' : isEditingSession() ? 'Save changes' : 'Add session' }}
+            </button>
+            @if (isEditingSession()) {
+              <button class="secondary-button" type="button" [disabled]="isSaving()" (click)="cancelEditingSession()">Cancel</button>
+            }
+          </div>
+        </form>
+      </section>
+
+      <section class="calendar-section window" aria-label="Learning sessions calendar">
+        <button class="btn btn-accent jump-to-form" type="button" (click)="focusComposer()">+ New study slot</button>
+        @if (isLoadingSessions() && sessions().length === 0) {
+          <p class="calendar-state" role="status">Loading sessions...</p>
+        }
+        <full-calendar [options]="calendarOptions!" />
+        @if (selectedSession(); as selected) {
+          <div class="session-detail" aria-live="polite">
+            <div>
+              <p class="detail-status">{{ selected.status.replace('_', ' ') }}</p>
+              <h2>{{ selected.content?.title ?? 'Unassigned session' }}</h2>
+              <p>{{ formatSessionDate(selected.startsAt, selected.timezone) }} · {{ selected.timezone }}</p>
+              @if (selected.status === 'PLANNED' && !selected.content && !isLoadingContent() && !contentError()) {
+                <p class="assignment-empty" role="status">
+                  No unassigned backlog items are available. This session remains unassigned.
+                </p>
+              }
+              @if (selected.seriesId; as seriesId) {
+                <p class="series-identity"><span>RECURRING SERIES</span><code>{{ seriesId }}</code></p>
+              }
+            </div>
+            @if (!isEditingSession()) {
+              <div class="session-detail-actions">
+                @if (selected.content; as content) {
+                  <a [href]="content.url" target="_blank" rel="noopener noreferrer" aria-label="Open assigned content in a new tab">↗</a>
+                }
+                @if (selected.status === 'PLANNED' || selected.status === 'IN_PROGRESS') {
+                  <button class="edit-session-button" type="button" data-action="complete" [disabled]="pendingLifecycleAction() !== null || isCancellingSeries()" (click)="performLifecycleAction('complete')">
+                    {{ pendingLifecycleAction() === 'complete' ? 'Completing...' : 'Complete' }}
+                  </button>
+                  <button class="edit-session-button session-action-danger" type="button" data-action="skip" [disabled]="pendingLifecycleAction() !== null || isCancellingSeries()" (click)="performLifecycleAction('skip')">
+                    {{ pendingLifecycleAction() === 'skip' ? 'Skipping...' : 'Skip' }}
+                  </button>
+                }
+                @if (selected.status === 'PLANNED') {
+                  <button class="edit-session-button session-action-danger" type="button" data-action="cancel" [disabled]="pendingLifecycleAction() !== null || isCancellingSeries()" (click)="performLifecycleAction('cancel')">
+                    {{ pendingLifecycleAction() === 'cancel' ? 'Cancelling...' : 'Cancel session' }}
+                  </button>
+                  <button class="edit-session-button" type="button" (click)="reassignSelectedContent()">Reassign content</button>
+                  <button class="edit-session-button" type="button" (click)="editSelectedSession()">Edit session</button>
+                }
+                @if (lifecycleError(); as message) {
+                  <p class="field-note error-text" role="alert">{{ message }}</p>
+                }
+              </div>
+            }
+            @if (!isEditingSession() && selected.seriesId; as seriesId) {
+              @if (selected.status === 'PLANNED' || selected.status === 'IN_PROGRESS') {
+              <section class="series-management" aria-label="Recurring series actions">
+                <div class="series-management-heading">
+                  <p class="detail-status">SERIES ACTIONS</p>
+                  <p>Applies to the entire series</p>
+                </div>
+                @if (!isEditingSeries()) {
+                  <div class="series-management-actions">
+                    <button class="edit-session-button" type="button" data-series-action="edit" [disabled]="isCancellingSeries() || pendingLifecycleAction() !== null" (click)="editSelectedSeries()">Edit entire series</button>
+                    <button class="edit-session-button session-action-danger" type="button" data-series-action="cancel" [disabled]="isCancellingSeries() || pendingLifecycleAction() !== null" (click)="cancelSelectedSeries()">
+                      {{ isCancellingSeries() ? 'Cancelling series...' : 'Cancel entire series' }}
+                    </button>
+                  </div>
+                }
+                @if (seriesActionError(); as message) {
+                  <p class="field-note error-text" role="alert">{{ message }}</p>
+                }
+                @if (isEditingSeries()) {
+                  <app-session-series-edit-panel
+                    [seriesId]="seriesId"
+                    (saved)="seriesUpdated()"
+                    (dismissed)="closeSeriesEditor()"
+                  />
+                }
+              </section>
+              }
+            }
+          </div>
+        }
+      </section>
+    </div>
+  }
+</section>

@@ -1,0 +1,157 @@
+<div class="backlog-layout">
+  
+  <app-add-content-page (contentAdded)="handleContentAdded($event)" />
+
+  <section class="library-section" aria-labelledby="library-title">
+    <div class="library-heading">
+      <div>
+        <p class="eyebrow">READY FOR LATER</p>
+        <h2 id="library-title">Saved content</h2>
+      </div>
+      @if (result(); as page) {
+        <p class="item-count">{{ page.totalItems }} {{ page.totalItems === 1 ? 'item' : 'items' }}</p>
+      }
+    </div>
+
+    <form class="filters" [formGroup]="filterForm" (ngSubmit)="applyFilters()">
+      <label class="search-field" for="content-search">
+        <span>Search</span>
+        <input id="content-search" type="search" formControlName="search" placeholder="Title or source" />
+      </label>
+      <label class="type-field" for="content-type">
+        <span>Type</span>
+        <select id="content-type" formControlName="type">
+          <option value="">All types</option>
+          <option value="YOUTUBE">YouTube</option>
+          <option value="ARTICLE">Articles</option>
+        </select>
+      </label>
+      <button class="filter-button" type="submit" [disabled]="isLoading()">Search</button>
+      <button class="clear-button" type="button" (click)="clearFilters()" [disabled]="isLoading()">
+        Clear
+      </button>
+    </form>
+
+    @if (isLoading() && !result()) {
+      <p class="list-state" role="status">Loading your backlog...</p>
+    } @else if (loadError(); as message) {
+      <div class="list-state error-state" role="alert">
+        <p>{{ message }}</p>
+        <button class="text-button" type="button" (click)="retry()">Retry</button>
+      </div>
+    } @else if (isLoading()) {
+      <p class="refresh-state" role="status">Updating results...</p>
+    } @else if (contentItems.length === 0) {
+      <div class="list-state empty-state">
+        <p class="empty-title">{{ filterForm.controls.search.value || filterForm.controls.type.value ? 'No matches' : 'Your backlog is clear' }}</p>
+        <p>{{ filterForm.controls.search.value || filterForm.controls.type.value ? 'Try a different search or filter.' : 'Add a video or article above and it will appear here.' }}</p>
+        @if (filterForm.controls.search.value || filterForm.controls.type.value) {
+          <button class="text-button" type="button" (click)="clearFilters()">Clear filters</button>
+        }
+      </div>
+    } @else {
+      <ul class="content-list" aria-label="Pending content">
+        @for (item of contentItems; track item.id) {
+          <li class="content-row" [class.is-editing]="editingContentId() === item.id">
+            <div class="content-main" [class.has-thumbnail]="item.thumbnailUrl">
+              @if (item.thumbnailUrl) {
+                <div class="thumbnail-frame">
+                  <img [src]="item.thumbnailUrl" [alt]="'Thumbnail for ' + item.title" loading="lazy" />
+                  @if (item.durationSeconds !== null) {
+                    <span class="duration-badge" aria-hidden="true">{{ formatDuration(item.durationSeconds) }}</span>
+                  }
+                </div>
+              }
+              <div class="content-details">
+                <span class="type-marker" [class.video-marker]="item.type === 'YOUTUBE'">
+                  {{ item.type === 'YOUTUBE' ? 'VIDEO' : 'ARTICLE' }}
+                </span>
+                @if (editingContentId() === item.id) {
+                  <div class="title-editor">
+                    <div class="editor-field">
+                      <label [for]="'title-' + item.id">Title</label>
+                      <input
+                        [id]="'title-' + item.id"
+                        type="text"
+                        [formControl]="titleControl"
+                        [attr.aria-invalid]="titleControl.invalid && titleControl.touched"
+                        [attr.aria-describedby]="titleControl.invalid && titleControl.touched ? 'content-title-error' : null"
+                      />
+                      @if (titleControl.invalid && titleControl.touched) {
+                        <p class="inline-error" id="content-title-error" role="alert">Enter a title.</p>
+                      }
+                    </div>
+                    <div class="editor-field">
+                      <label [for]="'duration-' + item.id">Minutes</label>
+                      <input
+                        [id]="'duration-' + item.id"
+                        type="number"
+                        class="duration-input"
+                        min="1"
+                        step="1"
+                        [formControl]="durationControl"
+                        [attr.aria-invalid]="durationControl.invalid && durationControl.touched"
+                        [attr.aria-describedby]="durationControl.invalid && durationControl.touched ? 'content-duration-error' : null"
+                      />
+                    </div>
+                    @if (durationControl.hasError('positiveInteger') && durationControl.touched) {
+                      <p class="inline-error" id="content-duration-error" role="alert">Enter a whole number of minutes greater than zero.</p>
+                    }
+                    @if (editSaveError(); as message) {
+                      <p class="inline-error" role="alert">{{ message }}</p>
+                    }
+                  </div>
+                } @else {
+                  <h3>{{ item.title }}</h3>
+                }
+                <p class="content-meta">
+                  <span>{{ item.sourceName || item.url }}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>Saved {{ formatDate(item.createdAt) }}</span>
+                  @if (item.durationSeconds !== null) {
+                    <span aria-hidden="true">·</span>
+                    <span>{{ formatDuration(item.durationSeconds) }}</span>
+                  } @else if (item.estimatedDurationMinutes !== null) {
+                    <span aria-hidden="true">·</span>
+                    <span>~{{ item.estimatedDurationMinutes }} min</span>
+                  }
+                </p>
+              </div>
+            </div>
+            <div class="row-actions">
+              @if (editingContentId() === item.id) {
+                <button class="text-button muted-button cancel-edit-button" type="button" (click)="cancelEditing()" [disabled]="savingEdit()">Cancel</button>
+                <button class="save-button save-edit-button" type="button" (click)="saveEdits(item)" [disabled]="savingEdit()">
+                  {{ savingEdit() ? 'Saving...' : 'Save changes' }}
+                </button>
+              } @else {
+                <button class="text-button edit-button" type="button" (click)="startEditing(item)" [disabled]="editingContentId() !== null" [attr.aria-label]="'Edit details for ' + item.title">Edit details</button>
+                <button class="text-button complete-button" type="button" (click)="completeItem(item)" [disabled]="completingContentId() !== null || editingContentId() !== null" [attr.aria-label]="'Mark ' + item.title + ' as complete'">Complete</button>
+                <a class="open-link" [href]="item.url" target="_blank" rel="noopener noreferrer" [attr.aria-label]="'Open ' + item.title + ' in a new tab'">
+                  Open <span aria-hidden="true">↗</span>
+                </a>
+              }
+            </div>
+            @if (completionError(); as message) {
+              <p class="inline-error" role="alert">{{ message }}</p>
+            }
+          </li>
+        }
+      </ul>
+
+      @if (result(); as page) {
+        @if (page.totalPages > 1) {
+          <nav class="pagination" aria-label="Backlog pages">
+            <button type="button" (click)="goToPage(page.page - 1)" [disabled]="page.page === 0 || isLoading()">
+              Previous
+            </button>
+            <span>Page {{ page.page + 1 }} of {{ page.totalPages }}</span>
+            <button type="button" (click)="goToPage(page.page + 1)" [disabled]="page.page + 1 >= page.totalPages || isLoading()">
+              Next
+            </button>
+          </nav>
+        }
+      }
+    }
+  </section>
+</div>

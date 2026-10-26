@@ -1,0 +1,104 @@
+<section class="dashboard-page">
+  
+  <app-add-content-page presentation="banner" (contentAdded)="handleContentAdded()" />
+  
+  <header class="hero window">
+    <div class="hero-copy">
+      <p class="eyebrow">Your links, at a glance</p>
+      <h1>Make room for learning.</h1>
+      <p class="heading-copy">A quick read on what is ready, what is next, and what needs a plan.</p>
+    </div>
+    <div class="hero-actions">
+      <a class="calendar-link" routerLink="/calendar">
+        Plan a session <span aria-hidden="true">↗</span>
+      </a>
+    </div>
+  </header>
+
+  @if (loadingDashboard()) {
+    <p class="dashboard-state" role="status">Loading your dashboard...</p>
+  } @else if (dashboardError()) {
+    <div class="dashboard-state dashboard-error" role="alert">
+      <p>Dashboard data could not be loaded.</p>
+      <button type="button" (click)="loadDashboard()">Try again</button>
+    </div>
+  } @else if (dashboard(); as summary) {
+    <section class="metric-grid" aria-label="Learning summary">
+      <a class="metric" routerLink="/backlog">
+        <span class="metric-label">PENDING</span>
+        <strong>{{ summary.pendingContentCount }}</strong>
+        <span class="metric-caption">items to learn</span>
+      </a>
+      <a class="metric" routerLink="/history">
+        <span class="metric-label">COMPLETED</span>
+        <strong>{{ summary.completedContentCount }}</strong>
+        <span class="metric-caption">items finished</span>
+      </a>
+      <a class="metric" routerLink="/calendar">
+        <span class="metric-label">TODAY</span>
+        <strong>{{ summary.todaySessionCount }}</strong>
+        <span class="metric-caption">sessions in your configured timezone</span>
+      </a>
+      <a class="metric" routerLink="/calendar">
+        <span class="metric-label">UPCOMING UNASSIGNED</span>
+        <strong>{{ summary.unassignedUpcomingSessionCount }}</strong>
+        <span class="metric-caption">sessions to review</span>
+      </a>
+    </section>
+
+    @if (settingsUnavailable()) {
+      <p class="timezone-note" role="status">
+        Your session time is shown in UTC because timezone settings could not be loaded.
+        <a routerLink="/settings">Check settings</a>
+      </p>
+    } @else if (loadingSettings()) {
+      <p class="timezone-note" role="status">Loading timezone settings. Session times are temporarily shown in UTC.</p>
+    }
+
+    <section class="dashboard-content" aria-label="What's next">
+      <article class="next-session window win-blue" aria-labelledby="next-session-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">UP AHEAD</p>
+            <h2 id="next-session-heading">Next session</h2>
+          </div>
+          @if (settings(); as preferences) {
+            <span class="timezone-label">{{ preferences.timezone }}</span>
+          } @else {
+            <span class="timezone-label">UTC</span>
+          }
+        </div>
+        @if (summary.nextSession; as nextSession) {
+          <h3>{{ nextSession.title }}</h3>
+          <p class="next-session-time">{{ formatNextSession(nextSession.startsAt) }}</p>
+          <a class="btn btn-primary text-link" [routerLink]="['/calendar']" [queryParams]="{ sessionId: nextSession.id }">
+            Open session <span aria-hidden="true">→</span>
+          </a>
+        } @else {
+          <p class="empty-title">Nothing scheduled yet.</p>
+          <p class="empty-copy">Add a link session to give your next learning block a time.</p>
+          <a class="btn btn-primary text-link" routerLink="/calendar">Open calendar <span aria-hidden="true">→</span></a>
+        }
+      </article>
+
+      @if (summary.unassignedUpcomingSessionCount > 0) {
+        <aside class="assignment-warning window" role="status" aria-labelledby="assignment-warning-heading">
+          <p class="eyebrow">NEEDS A LOOK</p>
+          <h2 id="assignment-warning-heading">Content unassigned</h2>
+          <p>{{ summary.unassignedUpcomingSessionCount }} upcoming {{ summary.unassignedUpcomingSessionCount === 1 ? 'session has' : 'sessions have' }} no learning item assigned. But no worries, it can be auto assigned minutes before the session starts.</p>
+          <a class="btn text-link" routerLink="/calendar">Review calendar <span aria-hidden="true">→</span></a>
+        </aside>
+      }
+    </section>
+
+    @if (summary.pendingContentCount === 0 && summary.completedContentCount === 0
+        && summary.todaySessionCount === 0 && summary.nextSession === null) {
+      <section class="empty-dashboard window" aria-label="Empty dashboard">
+        <p class="eyebrow">A FRESH START</p>
+        <h2>Your planner is clear.</h2>
+        <p>Add a video or article to your backlog, or create your first study session.</p>
+        <a class="btn btn-primary text-link" routerLink="/backlog">Open backlog <span aria-hidden="true">→</span></a>
+      </section>
+    }
+  }
+</section>

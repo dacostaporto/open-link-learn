@@ -1,0 +1,54 @@
+.push-copy,
+.push-message {
+  margin: 0 0 10px;
+  line-height: 1.55;
+}
+
+.push-copy {
+  max-width: 62ch;
+  color: var(--ink-soft);
+}
+
+.push-message {
+  padding: 10px 12px;
+  background: var(--paper-2);
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  font: 600 0.875rem/1.5 var(--font-mono);
+}
+
+.push-message.error-message {
+  color: var(--danger);
+  background: var(--danger-tint);
+  border-color: var(--danger);
+}
+
+.push-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.status-badge[data-status='enabled'] {
+  background: var(--sage);
+}
+
+.status-badge[data-status='denied'],
+.status-badge[data-status='error'] {
+  background: var(--terra);
+}
+
+.status-badge[data-status='unsupported'] {
+  background: var(--lavender);
+}
+
+.status-badge[data-status='off'] {
+  background: var(--card);
+}
+
+@media (max-width: 560px) {
+  .push-actions > * {
+    flex: 1 1 100%;
+  }
+}

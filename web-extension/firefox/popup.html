@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Save to Open Link Learn</title>
+    <link rel="stylesheet" href="popup.css">
+    <script type="module" src="popup.mjs"></script>
+  </head>
+  <body>
+    <main class="popup">
+      <header class="header">
+        <img src="icons/openlinklearn.svg" alt="" width="32" height="32">
+        <div>
+          <p class="eyebrow">OPEN LINK LEARN</p>
+          <h1>Save this page</h1>
+        </div>
+      </header>
+
+      <section class="page-preview" aria-label="Current page">
+        <h2 id="page-title">Loading page...</h2>
+        <p id="page-url" class="page-url"></p>
+      </section>
+
+      <button id="save-button" type="button" disabled>Save to backlog</button>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+    </main>
+  </body>
+</html>

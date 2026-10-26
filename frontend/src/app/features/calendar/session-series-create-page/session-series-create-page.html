@@ -1,0 +1,154 @@
+<section class="series-page" aria-labelledby="series-title">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">REPEAT YOUR PRACTICE</p>
+      <h1 id="series-title">Create a weekly series</h1>
+      <p class="intro">Choose the days and time you want to keep open for learning.</p>
+    </div>
+    <a class="back-link" routerLink="/calendar">Back to calendar</a>
+  </header>
+
+  @if (isLoading()) {
+    <p class="page-state" role="status">Loading your planner settings...</p>
+  } @else if (loadError(); as message) {
+    <div class="page-state error-state" role="alert">
+      <p>{{ message }}</p>
+      <button class="secondary-button" type="button" (click)="retryLoad()">Retry</button>
+    </div>
+  } @else if (createdSeries(); as series) {
+    <section class="created-state window" aria-labelledby="created-title">
+      <p class="eyebrow">SERIES CREATED</p>
+      <h2 id="created-title">Your weekly plan is on the calendar.</h2>
+      <p>Occurrences have been generated through {{ series.generatedThrough }}.</p>
+      <a class="submit-button" routerLink="/calendar">View calendar</a>
+    </section>
+  } @else {
+    <form class="series-form" [formGroup]="seriesForm" (ngSubmit)="createSeries()" novalidate>
+      <section class="form-section window" aria-labelledby="schedule-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">SCHEDULE</p>
+            <h2 id="schedule-title">When should it repeat?</h2>
+          </div>
+          <p class="section-note">Timezone: {{ seriesForm.controls.timezone.value }}</p>
+        </div>
+
+        <fieldset class="weekday-fieldset" [formGroup]="seriesForm.controls.daysOfWeek" aria-describedby="weekday-error">
+          <legend>Days of the week</legend>
+          <div class="weekday-options">
+            @for (weekday of weekdays; track weekday) {
+              <label class="weekday-option" [for]="'weekday-' + weekday">
+                <input [id]="'weekday-' + weekday" type="checkbox" [formControlName]="weekday" />
+                <span>{{ weekday.slice(0, 3) }}</span>
+              </label>
+            }
+          </div>
+          @if (seriesForm.controls.daysOfWeek.invalid && (seriesForm.controls.daysOfWeek.touched || submitted())) {
+            <p class="field-error" id="weekday-error" role="alert">Choose at least one day.</p>
+          }
+        </fieldset>
+
+        <div class="fields-grid">
+          <div class="field">
+            <label for="series-start-date">Start date</label>
+            <input
+              id="series-start-date"
+              type="date"
+              formControlName="startDate"
+              [attr.aria-invalid]="seriesForm.controls.startDate.invalid && seriesForm.controls.startDate.touched"
+              [attr.aria-describedby]="seriesForm.controls.startDate.invalid && seriesForm.controls.startDate.touched ? 'series-start-date-error' : null"
+            />
+            @if (seriesForm.controls.startDate.touched && seriesForm.controls.startDate.hasError('required')) {
+              <p class="field-error" id="series-start-date-error" role="alert">Choose a start date.</p>
+            }
+          </div>
+          <div class="field">
+            <label for="series-end-date">End date <span>Optional</span></label>
+            <input
+              id="series-end-date"
+              type="date"
+              formControlName="endDate"
+              [attr.aria-invalid]="showEndDateError()"
+              [attr.aria-describedby]="showEndDateError() ? 'series-end-date-error' : null"
+            />
+            @if (showEndDateError()) {
+              <p class="field-error" id="series-end-date-error" role="alert">End date must be on or after the start date.</p>
+            }
+          </div>
+          <div class="field">
+            <label for="series-start-time">Local start time</label>
+            <input
+              id="series-start-time"
+              type="time"
+              formControlName="startTime"
+              [attr.aria-invalid]="seriesForm.controls.startTime.invalid && seriesForm.controls.startTime.touched"
+              [attr.aria-describedby]="seriesForm.controls.startTime.invalid && seriesForm.controls.startTime.touched ? 'series-start-time-error' : null"
+            />
+            @if (seriesForm.controls.startTime.touched && seriesForm.controls.startTime.hasError('required')) {
+              <p class="field-error" id="series-start-time-error" role="alert">Choose a start time.</p>
+            }
+          </div>
+          <div class="field">
+            <label for="series-duration">Duration</label>
+            <div class="number-input"><input id="series-duration" type="number" min="1" max="720" step="1" formControlName="durationMinutes" [attr.aria-invalid]="seriesForm.controls.durationMinutes.invalid && seriesForm.controls.durationMinutes.touched" [attr.aria-describedby]="seriesForm.controls.durationMinutes.invalid && seriesForm.controls.durationMinutes.touched ? 'series-duration-error' : null" /><span>min</span></div>
+            @if (seriesForm.controls.durationMinutes.touched && seriesForm.controls.durationMinutes.invalid) {
+              <p class="field-error" id="series-duration-error" role="alert">Enter a whole number from 1 to 720.</p>
+            }
+          </div>
+          <div class="field">
+            <label for="series-timezone">Timezone</label>
+            <input id="series-timezone" type="text" list="series-timezones" autocomplete="off" formControlName="timezone" aria-describedby="timezone-error" [attr.aria-invalid]="seriesForm.controls.timezone.invalid && seriesForm.controls.timezone.touched" />
+            <datalist id="series-timezones">
+              <option value="Etc/UTC"></option>
+              <option value="Europe/Madrid"></option>
+              <option value="Europe/London"></option>
+              <option value="America/New_York"></option>
+              <option value="Asia/Tokyo"></option>
+            </datalist>
+            @if (seriesForm.controls.timezone.touched && seriesForm.controls.timezone.hasError('required')) {
+              <p class="field-error" id="timezone-error" role="alert">Enter a timezone.</p>
+            } @else if (seriesForm.controls.timezone.touched && seriesForm.controls.timezone.hasError('invalidTimezone')) {
+              <p class="field-error" id="timezone-error" role="alert">Enter a valid IANA timezone.</p>
+            }
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section preferences-section window" aria-labelledby="preferences-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">REMINDERS</p>
+            <h2 id="preferences-title">Timing preferences</h2>
+          </div>
+          <p class="section-note">Pre-filled from your settings</p>
+        </div>
+        <div class="fields-grid preference-grid">
+          <div class="field">
+            <label for="series-reminder">Reminder lead</label>
+            <div class="number-input"><input id="series-reminder" type="number" min="0" max="1440" step="1" formControlName="reminderMinutesBefore" [attr.aria-invalid]="seriesForm.controls.reminderMinutesBefore.invalid && seriesForm.controls.reminderMinutesBefore.touched" [attr.aria-describedby]="seriesForm.controls.reminderMinutesBefore.invalid && seriesForm.controls.reminderMinutesBefore.touched ? 'series-reminder-error' : null" /><span>min before</span></div>
+            @if (seriesForm.controls.reminderMinutesBefore.touched && seriesForm.controls.reminderMinutesBefore.invalid) {
+              <p class="field-error" id="series-reminder-error" role="alert">Enter a whole number from 0 to 1440.</p>
+            }
+          </div>
+          <div class="field">
+            <label for="series-cutoff">Assignment cutoff</label>
+            <div class="number-input"><input id="series-cutoff" type="number" min="0" max="10080" step="1" formControlName="assignmentCutoffMinutesBefore" [attr.aria-invalid]="seriesForm.controls.assignmentCutoffMinutesBefore.invalid && seriesForm.controls.assignmentCutoffMinutesBefore.touched" [attr.aria-describedby]="seriesForm.controls.assignmentCutoffMinutesBefore.invalid && seriesForm.controls.assignmentCutoffMinutesBefore.touched ? 'series-cutoff-error' : null" /><span>min before</span></div>
+            @if (seriesForm.controls.assignmentCutoffMinutesBefore.touched && seriesForm.controls.assignmentCutoffMinutesBefore.invalid) {
+              <p class="field-error" id="series-cutoff-error" role="alert">Enter a whole number from 0 to 10080.</p>
+            }
+          </div>
+        </div>
+      </section>
+
+      @if (formError(); as message) {
+        <p class="form-error" role="alert">{{ message }}</p>
+      }
+      <footer class="form-footer">
+        <p class="horizon-note">Without an end date, occurrences are generated using your recurrence horizon setting.</p>
+        <button class="submit-button" type="submit" [disabled]="isSaving()">
+          {{ isSaving() ? 'Creating series...' : 'Create series' }}
+        </button>
+      </footer>
+    </form>
+  }
+</section>

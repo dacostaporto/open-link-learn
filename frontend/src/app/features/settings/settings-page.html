@@ -1,0 +1,133 @@
+<section class="settings-page" aria-labelledby="settings-title">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">YOUR PLANNER</p>
+      <h1 id="settings-title">Settings</h1>
+      <p class="intro">Set the defaults your planner uses when you create sessions and series.</p>
+    </div>
+    <span class="heading-mark" aria-hidden="true">P</span>
+  </header>
+
+  @if (isLoading()) {
+    <p class="page-state" role="status">Loading your settings...</p>
+  } @else if (loadError(); as message) {
+    <div class="page-state error-state" role="alert">
+      <p>{{ message }}</p>
+      <button class="secondary-button" type="button" (click)="retryLoad()">Retry</button>
+    </div>
+  } @else {
+    <form [formGroup]="settingsForm" (ngSubmit)="saveSettings()" novalidate>
+      <section class="settings-section window" aria-labelledby="schedule-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">SCHEDULING</p>
+            <h2 id="schedule-title">Planning defaults</h2>
+          </div>
+          <p class="section-note">Used when creating new sessions or series</p>
+        </div>
+
+        <div class="settings-fields">
+          <div class="field timezone-field">
+            <label for="timezone">Timezone</label>
+            <p class="field-help" id="timezone-help">Use an IANA timezone, such as Europe/Madrid.</p>
+            <input
+              id="timezone"
+              type="text"
+              list="timezone-suggestions"
+              autocomplete="off"
+              formControlName="timezone"
+              aria-describedby="timezone-help timezone-error"
+              [attr.aria-invalid]="settingsForm.controls.timezone.invalid && settingsForm.controls.timezone.touched"
+            />
+            <datalist id="timezone-suggestions">
+              <option value="Etc/UTC"></option>
+              <option value="Europe/Madrid"></option>
+              <option value="Europe/London"></option>
+              <option value="America/New_York"></option>
+              <option value="Asia/Tokyo"></option>
+            </datalist>
+            @if (settingsForm.controls.timezone.touched && settingsForm.controls.timezone.hasError('required')) {
+              <span class="field-error" id="timezone-error">Enter a timezone.</span>
+            } @else if (settingsForm.controls.timezone.touched && settingsForm.controls.timezone.hasError('invalidTimezone')) {
+              <span class="field-error" id="timezone-error">Enter a valid IANA timezone.</span>
+            }
+          </div>
+
+          <div class="field">
+            <label for="reminder-lead">Default reminder lead</label>
+            <p class="field-help" id="reminder-help">Minutes before a session</p>
+            <input
+              id="reminder-lead"
+              type="number"
+              min="0"
+              max="1440"
+              step="1"
+              formControlName="defaultReminderMinutesBefore"
+              aria-describedby="reminder-help reminder-error"
+              [attr.aria-invalid]="settingsForm.controls.defaultReminderMinutesBefore.invalid && settingsForm.controls.defaultReminderMinutesBefore.touched"
+            />
+            @if (settingsForm.controls.defaultReminderMinutesBefore.touched && settingsForm.controls.defaultReminderMinutesBefore.invalid) {
+              <span class="field-error" id="reminder-error">Enter a whole number from 0 to 1440.</span>
+            }
+          </div>
+
+          <div class="field">
+            <label for="assignment-cutoff">Assignment cutoff</label>
+            <p class="field-help" id="cutoff-help">Minutes before a session</p>
+            <input
+              id="assignment-cutoff"
+              type="number"
+              min="0"
+              max="10080"
+              step="1"
+              formControlName="defaultAssignmentCutoffMinutesBefore"
+              aria-describedby="cutoff-help cutoff-error"
+              [attr.aria-invalid]="settingsForm.controls.defaultAssignmentCutoffMinutesBefore.invalid && settingsForm.controls.defaultAssignmentCutoffMinutesBefore.touched"
+            />
+            @if (settingsForm.controls.defaultAssignmentCutoffMinutesBefore.touched && settingsForm.controls.defaultAssignmentCutoffMinutesBefore.invalid) {
+              <span class="field-error" id="cutoff-error">Enter a whole number from 0 to 10080.</span>
+            }
+          </div>
+
+          <div class="field">
+            <label for="recurrence-horizon">Recurrence horizon</label>
+            <p class="field-help" id="horizon-help">How far ahead to create sessions, in days</p>
+            <input
+              id="recurrence-horizon"
+              type="number"
+              min="7"
+              max="365"
+              step="1"
+              formControlName="recurrenceHorizonDays"
+              aria-describedby="horizon-help horizon-error"
+              [attr.aria-invalid]="settingsForm.controls.recurrenceHorizonDays.invalid && settingsForm.controls.recurrenceHorizonDays.touched"
+            />
+            @if (settingsForm.controls.recurrenceHorizonDays.touched && settingsForm.controls.recurrenceHorizonDays.invalid) {
+              <span class="field-error" id="horizon-error">Enter a whole number from 7 to 365.</span>
+            }
+          </div>
+        </div>
+
+        <p class="defaults-note">
+          Changes are defaults for new sessions and series only. Existing sessions and series will not be changed.
+        </p>
+      </section>
+
+      <app-push-settings-section />
+
+      <div class="form-footer">
+        <div class="save-feedback" aria-live="polite">
+          @if (saveSuccess()) {
+            <p class="success-message" role="status">Settings saved.</p>
+          }
+          @if (saveError(); as message) {
+            <p class="field-error" role="alert">{{ message }}</p>
+          }
+        </div>
+        <button class="save-button" type="submit" [disabled]="isSaving() || settingsForm.pristine">
+          {{ isSaving() ? 'Saving...' : 'Save settings' }}
+        </button>
+      </div>
+    </form>
+  }
+</section>

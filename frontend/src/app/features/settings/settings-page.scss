@@ -1,0 +1,64 @@
+.settings-page {
+  max-width: 920px;
+}
+
+form {
+  display: grid;
+  gap: 28px;
+}
+
+.settings-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 20px;
+}
+
+.timezone-field {
+  grid-column: 1 / -1;
+}
+
+.defaults-note {
+  margin: 18px 0 0;
+  padding: 10px 12px;
+  background: var(--mustard-tint);
+  border: 2px dashed var(--ink);
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.form-footer {
+  margin-top: 0;
+}
+
+.save-feedback {
+  min-height: 1.5rem;
+}
+
+.save-feedback p {
+  margin: 0;
+}
+
+.save-button {
+  min-height: 50px;
+  padding-inline: 24px;
+}
+
+@media (max-width: 899px) {
+  .form-footer {
+    position: sticky;
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    z-index: 5;
+    flex-wrap: nowrap;
+    padding: 10px 12px;
+    background: var(--paper);
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+  }
+}
+
+@media (max-width: 560px) {
+  .settings-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Open Link Learn: Save to backlog",
+  "version": "1.0.0",
+  "description": "Save the current page to your Open Link Learn backlog.",
+  "permissions": [
+    "activeTab"
+  ],
+  "host_permissions": [
+    "http://localhost:8080/*"
+  ],
+  "action": {
+    "default_title": "Save page to Open Link Learn",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "48": "icons/openlinklearn.svg"
+    }
+  },
+  "icons": {
+    "48": "icons/openlinklearn.svg"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "open-link-learn-save-page@openlinklearn.local",
+      "strict_min_version": "128.0",
+      "data_collection_permissions": {
+        "required": [
+          "browsingActivity"
+        ]
+      }
+    }
+  }
+}

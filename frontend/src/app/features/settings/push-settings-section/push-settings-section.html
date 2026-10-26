@@ -1,0 +1,65 @@
+<section class="settings-section push-section window" aria-labelledby="push-title">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">NOTIFICATIONS</p>
+      <h2 id="push-title">Push reminders</h2>
+    </div>
+    <span class="status-badge" [attr.data-status]="push.state().status">
+      @switch (push.state().status) {
+        @case ('enabled') { Enabled }
+        @case ('denied') { Permission blocked }
+        @case ('unsupported') { Not available }
+        @case ('error') { Action needed }
+        @default { Off }
+      }
+    </span>
+  </div>
+
+  <p class="push-copy">
+    Allow browser notifications to receive session reminders. The private VAPID key stays on the server.
+  </p>
+  <p
+    class="push-message"
+    [class.error-message]="push.state().status === 'error' || push.state().status === 'denied'"
+    [attr.role]="push.state().status === 'error' || push.state().status === 'denied' ? 'alert' : 'status'"
+  >
+    {{ push.state().message }}
+  </p>
+
+  <div class="push-actions">
+    @if (push.state().status === 'enabled') {
+      <button id="disable-push" class="push-button secondary-button" type="button" [disabled]="push.busy()" (click)="disable()">
+        {{ push.busy() ? 'Disabling...' : 'Disable push' }}
+      </button>
+    } @else if (push.state().status === 'unsupported') {
+      @if (push.state().hasSubscription) {
+        <button id="remove-push" class="push-button secondary-button" type="button" [disabled]="push.busy()" (click)="disable()">
+          {{ push.busy() ? 'Removing...' : 'Remove this browser' }}
+        </button>
+      }
+    } @else if (push.state().status === 'denied') {
+      @if (push.state().hasSubscription) {
+        <button id="remove-push" class="push-button secondary-button" type="button" [disabled]="push.busy()" (click)="disable()">
+          {{ push.busy() ? 'Removing...' : 'Remove this browser' }}
+        </button>
+      } @else {
+        <button id="enable-push" class="push-button" type="button" [disabled]="push.busy()" (click)="enable()">Check permission again</button>
+      }
+    } @else if (push.state().status === 'error') {
+      <button
+        id="retry-remove-push"
+        class="push-button"
+        [class.secondary-button]="push.state().operation === 'disable'"
+        type="button"
+        [disabled]="push.busy()"
+        (click)="push.state().operation === 'disable' ? disable() : enable()"
+      >
+        {{ push.busy() ? 'Working...' : push.state().operation === 'disable' ? 'Retry removal' : 'Retry enable' }}
+      </button>
+    } @else {
+      <button id="enable-push" class="push-button" type="button" [disabled]="push.busy()" (click)="enable()">
+        {{ push.busy() ? 'Enabling...' : 'Enable push' }}
+      </button>
+    }
+  </div>
+</section>

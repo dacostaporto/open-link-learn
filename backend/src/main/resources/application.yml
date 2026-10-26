@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: open-link-learn-api
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:openlinklearn}
+    username: ${POSTGRES_USER:openlinklearn}
+    password: ${POSTGRES_PASSWORD:change-me-local-only}
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+openlinklearn:
+  cors:
+    allowed-origin: ${APP_ALLOWED_ORIGIN:http://localhost:4200}
+  push:
+    enabled: ${VAPID_ENABLED:false}
+    vapid-public-key: ${VAPID_PUBLIC_KEY:}
+    vapid-private-key: ${VAPID_PRIVATE_KEY:}
+    vapid-subject: ${VAPID_SUBJECT:mailto:admin@openlinklearn.invalid}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+      show-components: never
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState,db
+
+logging:
+  structured:
+    format:
+      console: logstash

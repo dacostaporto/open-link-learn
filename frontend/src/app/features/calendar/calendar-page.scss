@@ -1,0 +1,164 @@
+:host {
+  display: block;
+}
+
+.page-heading h1 {
+  margin-bottom: 0;
+}
+
+.page-heading .timezone-label span {
+  width: 10px;
+  height: 10px;
+  background: var(--terra);
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+}
+
+.calendar-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 330px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.calendar-section {
+  --pad: 14px;
+}
+
+.jump-to-form {
+  display: none;
+  width: 100%;
+  margin-bottom: 14px;
+}
+
+.session-composer form {
+  display: grid;
+  gap: 12px;
+}
+
+.session-composer label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.datetime-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.datetime-field {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.lead-time-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px 12px;
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 2px dashed var(--ink);
+}
+
+.form-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.form-actions button {
+  width: 100%;
+  min-height: 50px;
+}
+
+.session-detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 18px;
+  padding: 16px;
+  background: var(--mustard-tint);
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.session-detail > div:first-child {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+.session-detail h2 {
+  margin: 8px 0 4px;
+  font-size: 1.3rem;
+  overflow-wrap: anywhere;
+}
+
+.session-detail p {
+  margin: 0 0 4px;
+  color: var(--ink-soft);
+  font-size: 0.875rem;
+}
+
+.session-detail .detail-status {
+  color: var(--ink);
+}
+
+.session-detail-actions {
+  display: flex;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.session-detail-actions [role='alert'] {
+  flex-basis: 100%;
+}
+
+.session-detail-actions a {
+  display: grid;
+  width: var(--tap);
+  height: var(--tap);
+  place-items: center;
+  padding: 0;
+  font-size: 1.2rem;
+}
+
+.assignment-empty {
+  padding: 8px 10px;
+  background: var(--card);
+  border: 2px dashed var(--ink);
+  border-radius: 4px;
+}
+
+@media (max-width: 899px) {
+  .calendar-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  .calendar-section {
+    order: 1;
+  }
+
+  .session-composer {
+    order: 2;
+  }
+
+  .jump-to-form {
+    display: inline-flex;
+  }
+}
+
+@media (max-width: 420px) {
+  .session-detail-actions > button {
+    flex: 1 1 auto;
+  }
+}

@@ -25,7 +25,7 @@ describe('App', () => {
       'Home',
       'Backlog',
       'Calendar',
-      'Archive',
+      'History',
       'Settings',
     ]);
   });

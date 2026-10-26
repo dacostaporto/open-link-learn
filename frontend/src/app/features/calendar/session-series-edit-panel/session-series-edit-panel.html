@@ -1,0 +1,120 @@
+<section class="series-editor" aria-labelledby="series-editor-title">
+  <header class="editor-heading">
+    <div>
+      <p class="eyebrow">ENTIRE SERIES</p>
+      <h3 id="series-editor-title">Edit recurring schedule</h3>
+    </div>
+    <button class="icon-close" type="button" aria-label="Close series editor" (click)="dismissed.emit()">x</button>
+  </header>
+
+  @if (isLoading()) {
+    <p class="editor-state" role="status">Loading saved series...</p>
+  } @else if (loadError(); as message) {
+    <div class="editor-state error-state" role="alert">
+      <p>{{ message }}</p>
+      <button class="secondary-button" type="button" (click)="retryLoad()">Retry</button>
+    </div>
+  } @else if (series(); as details) {
+    @if (!details.active) {
+      <p class="editor-state" role="status">This series is inactive and cannot be edited.</p>
+    } @else {
+      <p class="scope-note">Changes apply to the entire series. Completed occurrences remain unchanged.</p>
+      <form [formGroup]="seriesForm" (ngSubmit)="saveSeries()" novalidate>
+        <fieldset class="weekday-fieldset" [formGroup]="seriesForm.controls.daysOfWeek" aria-describedby="edit-weekday-error">
+          <legend>Repeat on</legend>
+          <div class="weekday-options">
+            @for (weekday of weekdays; track weekday) {
+              <label [for]="'edit-weekday-' + weekday">
+                <input [id]="'edit-weekday-' + weekday" type="checkbox" [formControlName]="weekday" />
+                <span>{{ weekday.slice(0, 3) }}</span>
+              </label>
+            }
+          </div>
+          @if (seriesForm.controls.daysOfWeek.invalid && (seriesForm.controls.daysOfWeek.touched || submitted())) {
+            <p class="field-error" id="edit-weekday-error" role="alert">Choose at least one day.</p>
+          }
+        </fieldset>
+
+        <div class="editor-fields">
+          <div class="field">
+            <label for="edit-series-start">Start date</label>
+            <input
+              id="edit-series-start"
+              type="date"
+              formControlName="startDate"
+              [attr.aria-invalid]="seriesForm.controls.startDate.invalid && seriesForm.controls.startDate.touched"
+              [attr.aria-describedby]="seriesForm.controls.startDate.invalid && seriesForm.controls.startDate.touched ? 'edit-series-start-error' : null"
+            />
+            @if (seriesForm.controls.startDate.touched && seriesForm.controls.startDate.hasError('required')) {
+              <p class="field-error" id="edit-series-start-error" role="alert">Choose a start date.</p>
+            }
+          </div>
+          <div class="field">
+            <label for="edit-series-end">End date <span>Optional</span></label>
+            <input
+              id="edit-series-end"
+              type="date"
+              formControlName="endDate"
+              [attr.aria-invalid]="showEndDateError()"
+              [attr.aria-describedby]="showEndDateError() ? 'edit-series-end-error' : null"
+            />
+            @if (showEndDateError()) {
+              <p class="field-error" id="edit-series-end-error" role="alert">End date must be on or after the start date.</p>
+            }
+          </div>
+          <div class="field">
+            <label for="edit-series-time">Local time</label>
+            <input
+              id="edit-series-time"
+              type="time"
+              formControlName="startTime"
+              [attr.aria-invalid]="seriesForm.controls.startTime.invalid && seriesForm.controls.startTime.touched"
+              [attr.aria-describedby]="seriesForm.controls.startTime.invalid && seriesForm.controls.startTime.touched ? 'edit-series-time-error' : null"
+            />
+            @if (seriesForm.controls.startTime.touched && seriesForm.controls.startTime.hasError('required')) {
+              <p class="field-error" id="edit-series-time-error" role="alert">Choose a local time.</p>
+            }
+          </div>
+          <div class="field">
+            <label for="edit-series-duration">Duration</label>
+            <input id="edit-series-duration" type="number" min="1" max="720" step="1" formControlName="durationMinutes" [attr.aria-invalid]="seriesForm.controls.durationMinutes.invalid && seriesForm.controls.durationMinutes.touched" [attr.aria-describedby]="seriesForm.controls.durationMinutes.invalid && seriesForm.controls.durationMinutes.touched ? 'edit-series-duration-error' : null" />
+            @if (seriesForm.controls.durationMinutes.touched && seriesForm.controls.durationMinutes.invalid) {
+              <p class="field-error" id="edit-series-duration-error" role="alert">Use a whole number from 1 to 720.</p>
+            }
+          </div>
+          <div class="field">
+            <label for="edit-series-timezone">Timezone</label>
+            <input id="edit-series-timezone" type="text" formControlName="timezone" [attr.aria-invalid]="seriesForm.controls.timezone.invalid && seriesForm.controls.timezone.touched" [attr.aria-describedby]="seriesForm.controls.timezone.invalid && seriesForm.controls.timezone.touched ? 'edit-series-timezone-error' : null" />
+            @if (seriesForm.controls.timezone.touched && seriesForm.controls.timezone.invalid) {
+              <p class="field-error" id="edit-series-timezone-error" role="alert">Enter a valid IANA timezone.</p>
+            }
+          </div>
+          <div class="field">
+            <label for="edit-series-reminder">Reminder lead (minutes)</label>
+            <input id="edit-series-reminder" type="number" min="0" max="1440" step="1" formControlName="reminderMinutesBefore" [attr.aria-invalid]="seriesForm.controls.reminderMinutesBefore.invalid && seriesForm.controls.reminderMinutesBefore.touched" [attr.aria-describedby]="seriesForm.controls.reminderMinutesBefore.invalid && seriesForm.controls.reminderMinutesBefore.touched ? 'edit-series-reminder-error' : null" />
+            @if (seriesForm.controls.reminderMinutesBefore.touched && seriesForm.controls.reminderMinutesBefore.invalid) {
+              <p class="field-error" id="edit-series-reminder-error" role="alert">Use a whole number from 0 to 1440.</p>
+            }
+          </div>
+          <div class="field">
+            <label for="edit-series-cutoff">Assignment cutoff (minutes)</label>
+            <input id="edit-series-cutoff" type="number" min="0" max="10080" step="1" formControlName="assignmentCutoffMinutesBefore" [attr.aria-invalid]="seriesForm.controls.assignmentCutoffMinutesBefore.invalid && seriesForm.controls.assignmentCutoffMinutesBefore.touched" [attr.aria-describedby]="seriesForm.controls.assignmentCutoffMinutesBefore.invalid && seriesForm.controls.assignmentCutoffMinutesBefore.touched ? 'edit-series-cutoff-error' : null" />
+            @if (seriesForm.controls.assignmentCutoffMinutesBefore.touched && seriesForm.controls.assignmentCutoffMinutesBefore.invalid) {
+              <p class="field-error" id="edit-series-cutoff-error" role="alert">Use a whole number from 0 to 10080.</p>
+            }
+          </div>
+        </div>
+
+        @if (saveError(); as message) {
+          <p class="field-error save-error" role="alert">{{ message }}</p>
+        }
+        <div class="editor-actions">
+          <button class="submit-button" type="submit" [disabled]="isSaving()">
+            {{ isSaving() ? 'Saving...' : 'Save entire series' }}
+          </button>
+          <button class="secondary-button" type="button" [disabled]="isSaving()" (click)="dismissed.emit()">Close</button>
+        </div>
+      </form>
+    }
+  }
+</section>
