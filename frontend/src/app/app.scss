@@ -1,0 +1,259 @@
+:host {
+  display: block;
+  min-height: 100dvh;
+}
+
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  padding: 10px 14px;
+  color: #fff;
+  background: var(--ink);
+  border-radius: 4px;
+  font: 700 0.8125rem var(--font-mono);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus-visible {
+  color: #fff;
+  transform: none;
+  outline-color: var(--mustard);
+}
+
+.app-frame {
+  display: grid;
+  grid-template: 'top top' auto 'nav main' 1fr / 248px minmax(0, 1fr);
+  min-height: 100dvh;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  grid-area: top;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 68px;
+  padding: 10px 20px;
+  background: var(--paper);
+  border-bottom: 2px solid var(--ink);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 4px 12px 4px 6px;
+  color: var(--ink);
+  background: var(--card);
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  text-decoration: none;
+}
+
+.brand-mark {
+  width: 32px;
+  height: 32px;
+  flex: none;
+}
+
+.brand-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.brand-name em {
+  padding: 0 4px;
+  background: var(--mustard);
+  font-style: normal;
+}
+
+.topbar-tag {
+  flex: 1;
+  margin: 0;
+  color: var(--ink-soft);
+  font: 600 0.75rem/1.3 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.sidebar {
+  position: sticky;
+  top: 68px;
+  display: flex;
+  grid-area: nav;
+  flex-direction: column;
+  height: calc(100dvh - 68px);
+  padding: 24px 18px 20px;
+  background: var(--paper-2);
+  border-right: 2px solid var(--ink);
+}
+
+.nav-list {
+  display: grid;
+  gap: 12px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 12px;
+  color: var(--ink);
+  background: var(--card);
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 60ms ease, box-shadow 60ms ease, background-color 120ms ease;
+}
+
+.nav-link:hover {
+  background: var(--mustard-tint);
+}
+
+.nav-link.is-active {
+  color: #fff;
+  background: var(--cobalt);
+  box-shadow: none;
+  transform: translate(3px, 3px);
+}
+
+.nav-icon {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linejoin: round;
+  stroke-width: 2.2;
+}
+
+.sidebar-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  margin: auto 0 0;
+  padding: 4px 10px;
+  background: var(--card);
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  font: 600 0.6875rem/1.6 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.status-dot {
+  width: 9px;
+  height: 9px;
+  background: var(--sage);
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+}
+
+.main-area {
+  grid-area: main;
+  min-width: 0;
+  outline: none;
+}
+
+.page-content {
+  width: min(100%, 1180px);
+  margin-inline: auto;
+  padding: 32px 32px 64px;
+}
+
+@media (max-width: 899px) {
+  .app-frame {
+    grid-template: 'top' auto 'main' 1fr / minmax(0, 1fr);
+  }
+
+  .topbar {
+    padding: 8px 14px;
+  }
+
+  .topbar-tag {
+    display: none;
+  }
+
+  .sidebar {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 40;
+    height: auto;
+    padding: 0 0 env(safe-area-inset-bottom);
+    background: var(--paper);
+    border-top: 2px solid var(--ink);
+    border-right: 0;
+  }
+
+  .nav-list {
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+    gap: 0;
+  }
+
+  .nav-link {
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    min-height: 56px;
+    padding: 3px 2px;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    font-size: 0.6rem;
+  }
+
+  .nav-link + .nav-link {
+    border-left: 2px solid var(--ink);
+  }
+
+  .nav-link.is-active {
+    box-shadow: inset 0 5px 0 var(--mustard);
+    transform: none;
+  }
+
+  .sidebar-footer {
+    display: none;
+  }
+
+  .page-content {
+    padding: 22px 16px calc(96px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 380px) {
+  .topbar {
+    gap: 8px;
+    padding-inline: 8px;
+  }
+
+  .brand {
+    gap: 6px;
+    padding: 4px 8px 4px 4px;
+  }
+
+  .brand-mark {
+    width: 28px;
+    height: 28px;
+  }
+
+  .brand-name {
+    font-size: 0.9rem;
+  }
+
+}

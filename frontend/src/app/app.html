@@ -1,0 +1,44 @@
+<a class="skip-link" href="/home" (click)="skipToContent($event)">Skip to content</a>
+
+<div class="app-frame">
+  <header class="topbar">
+    <a class="brand" routerLink="/home" aria-label="Open Link Learn home">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+        <rect x="2" y="3" width="28" height="26" rx="4" fill="#facc15" stroke="#18181b" stroke-width="2.5" />
+        <path d="M2 10h28" stroke="#18181b" stroke-width="2.5" />
+        <circle cx="7" cy="6.6" r="1.4" fill="#18181b" />
+        <circle cx="12" cy="6.6" r="1.4" fill="#18181b" />
+        <rect x="6" y="16" width="12" height="7" rx="3.5" fill="none" stroke="#18181b" stroke-width="2.4" />
+        <rect x="14" y="13" width="12" height="7" rx="3.5" fill="none" stroke="#2563eb" stroke-width="2.4" />
+      </svg>
+      <span class="brand-name">Open Link <em>Learn</em></span>
+    </a>
+  </header>
+
+  <aside class="sidebar">
+    <nav class="nav-list" aria-label="Primary navigation">
+      @for (item of navigation; track item.path) {
+        <a
+          class="nav-link"
+          [routerLink]="item.path"
+          routerLinkActive="is-active"
+          ariaCurrentWhenActive="page"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path [attr.d]="item.icon" />
+          </svg>
+          <span>{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+
+    <p class="sidebar-footer"><span class="status-dot" aria-hidden="true"></span> Private workspace</p>
+  </aside>
+
+  <main id="main-content" class="main-area" tabindex="-1">
+    <div class="page-content">
+      <router-outlet />
+    </div>
+  </main>
+</div>

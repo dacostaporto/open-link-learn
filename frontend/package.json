@@ -1,0 +1,52 @@
+{
+  "name": "openlinklearn-frontend",
+  "version": "0.0.1",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "lint": "eslint \"src/**/*.ts\" \"src/**/*.html\"",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
+    "verify:pwa": "node tools/verify-pwa.mjs",
+    "test:service-worker": "node --test tools/notification-worker.test.mjs"
+  },
+  "private": true,
+  "packageManager": "npm@11.17.0",
+  "dependencies": {
+    "@angular/common": "^22.2.0",
+    "@angular/compiler": "^22.2.0",
+    "@angular/core": "^22.2.0",
+    "@angular/forms": "^22.2.0",
+    "@angular/platform-browser": "^22.2.0",
+    "@angular/router": "^22.2.0",
+    "@angular/service-worker": "^22.2.3",
+    "@fullcalendar/angular": "^6.1.22",
+    "@fullcalendar/core": "^6.1.22",
+    "@fullcalendar/daygrid": "^6.1.22",
+    "@fullcalendar/interaction": "^6.1.22",
+    "@fullcalendar/luxon3": "^6.1.22",
+    "@fullcalendar/timegrid": "^6.1.22",
+    "@js-temporal/polyfill": "^0.5.1",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@angular/build": "^22.2.4",
+    "@angular/cli": "^22.2.4",
+    "@angular/compiler-cli": "^22.2.0",
+    "angular-eslint": "^22.6.0",
+    "eslint": "^10.13.0",
+    "jsdom": "^30.0.0",
+    "prettier": "^3.8.1",
+    "typescript": "~6.0.2",
+    "typescript-eslint": "^8.72.0",
+    "vitest": "^5.0.0"
+  },
+  "allowScripts": {
+    "@parcel/watcher@2.6.0": true,
+    "esbuild@0.28.2": true,
+    "lmdb@3.5.6": true,
+    "msgpackr-extract@3.0.4": true
+  }
+}

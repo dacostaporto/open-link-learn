@@ -1,0 +1,18 @@
+{
+  "name": "Open Link Learn",
+  "short_name": "Open Link Learn",
+  "description": "Save videos and articles, plan study sessions, and get reminders.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#faf6f0",
+  "theme_color": "#faf6f0",
+  "icons": [
+    {
+      "src": "/icons/openlinklearn-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
