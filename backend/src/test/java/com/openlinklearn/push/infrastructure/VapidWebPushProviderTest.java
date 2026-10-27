@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 class VapidWebPushProviderTest {
 
@@ -36,8 +35,16 @@ class VapidWebPushProviderTest {
     }
 
     @Test
-    void ignoresNonJsonAndNonErrorProviderBodies() {
-        assertNull(VapidWebPushProvider.extractProviderReason("forbidden", objectMapper));
-        assertNull(VapidWebPushProvider.extractProviderReason("{\"message\":\"forbidden\"}", objectMapper));
+    void capturesSanitizedNonJsonAndUnrecognizedJsonBodies() {
+        assertEquals("forbidden", VapidWebPushProvider.extractProviderReason("forbidden", objectMapper));
+        assertEquals(
+                "{\"message\":\"forbidden\"}",
+                VapidWebPushProvider.extractProviderReason("{\"message\":\"forbidden\"}", objectMapper));
+    }
+
+    @Test
+    void reportsEmptyProviderResponseBodies() {
+        assertEquals("provider_response_body_empty", VapidWebPushProvider.extractProviderReason("", objectMapper));
+        assertEquals("provider_response_body_empty", VapidWebPushProvider.extractProviderReason(null, objectMapper));
     }
 }

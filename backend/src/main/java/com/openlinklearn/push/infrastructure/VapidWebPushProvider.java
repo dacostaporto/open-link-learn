@@ -88,32 +88,33 @@ public class VapidWebPushProvider implements WebPushProvider {
 
     static String extractProviderReason(String responseBody, ObjectMapper objectMapper) {
         if (responseBody == null || responseBody.isBlank()) {
-            return null;
+            return "provider_response_body_empty";
         }
         try {
             JsonNode error = objectMapper.readTree(responseBody).path("error");
-            if (!error.isObject()) {
-                return null;
-            }
-
-            List<String> reasons = new ArrayList<>();
-            addReason(reasons, error.path("status").asText(null));
-            JsonNode details = error.path("details");
-            if (details.isArray()) {
-                for (JsonNode detail : details) {
-                    addReason(reasons, detail.path("errorCode").asText(null));
+            if (error.isObject()) {
+                List<String> reasons = new ArrayList<>();
+                addReason(reasons, error.path("status").asText(null));
+                JsonNode details = error.path("details");
+                if (details.isArray()) {
+                    for (JsonNode detail : details) {
+                        addReason(reasons, detail.path("errorCode").asText(null));
+                    }
+                }
+                reasons.add(sanitizeProviderMessage(error.path("message").asText(null)));
+                String reason = reasons.stream()
+                        .filter(value -> value != null && !value.isBlank())
+                        .distinct()
+                        .reduce((first, second) -> first + "; " + second)
+                        .orElse(null);
+                if (reason != null) {
+                    return reason.substring(0, Math.min(reason.length(), MAX_REASON_LENGTH));
                 }
             }
-            reasons.add(sanitizeProviderMessage(error.path("message").asText(null)));
-            String reason = reasons.stream()
-                    .filter(value -> value != null && !value.isBlank())
-                    .distinct()
-                    .reduce((first, second) -> first + "; " + second)
-                    .orElse(null);
-            return reason == null ? null : reason.substring(0, Math.min(reason.length(), MAX_REASON_LENGTH));
         } catch (IOException exception) {
-            return null;
+            return sanitizeProviderMessage(responseBody);
         }
+        return sanitizeProviderMessage(responseBody);
     }
 
     private static void addReason(List<String> reasons, String value) {
@@ -144,7 +145,7 @@ public class VapidWebPushProvider implements WebPushProvider {
             EntityUtils.consume(entity);
         }
         if (body.length > MAX_PROVIDER_BODY_BYTES) {
-            return null;
+            return "provider_response_body_too_large";
         }
         return new String(body, StandardCharsets.UTF_8);
     }
