@@ -51,6 +51,16 @@ public class SessionController {
         return ResponseEntity.created(URI.create("/api/v1/sessions/" + response.id())).body(response);
     }
 
+    @GetMapping("/{id}")
+    @Operation(summary = "Get a session", description = "Returns one session and its assigned content summary in the local owner context.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Session returned", content = @Content(mediaType = "application/json", schema = @Schema(implementation = SessionResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Session was not found", content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ApiProblem.class)))
+    })
+    public SessionResponse getSessionById(@PathVariable java.util.UUID id) {
+        return sessionService.getSessionById(id);
+    }
+
     @PatchMapping("/{id}")
     @Operation(summary = "Update a planned session", description = "Updates persisted session timing, content assignment, and reminder/cutoff overrides. Job scheduling is integrated in a later task.")
     @ApiResponses({

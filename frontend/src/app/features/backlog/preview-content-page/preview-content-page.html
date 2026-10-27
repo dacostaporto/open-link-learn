@@ -1,0 +1,104 @@
+<section class="preview-content-page" aria-labelledby="preview-title">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">SESSION REMINDER</p>
+      <h1 id="preview-title">Your learning session</h1>
+      <p class="heading-copy">Session details and the content assigned to this reminder.</p>
+    </div>
+  </header>
+
+  @if (isLoading()) {
+    <p class="list-state" role="status">Loading session preview...</p>
+  } @else if (loadError(); as message) {
+    <div class="page-error" role="alert">
+      <p>{{ message }}</p>
+      @if (sessionId) {
+        <button class="text-button" type="button" (click)="retry()">Retry</button>
+      }
+    </div>
+  } @else if (session(); as currentSession) {
+    <section class="session-card window" aria-labelledby="session-details-title">
+      <div class="session-heading">
+        <div>
+          <p class="eyebrow">SESSION DETAILS</p>
+          <h2 id="session-details-title">
+            {{ currentSession.content?.title || 'Learning session' }}
+          </h2>
+        </div>
+        <span class="status-badge">{{ currentSession.status.replace('_', ' ') }}</span>
+      </div>
+
+      <dl class="session-details">
+        <div>
+          <dd>{{ formatDateTime(currentSession.startsAt, currentSession.timezone) }}</dd>
+        </div>
+        <div>
+        </div>
+        <div>
+          <dt>Duration</dt>
+          <dd>{{ durationMinutes(currentSession) }} minutes</dd>
+        </div>
+        <div>
+          <dt>Reminder</dt>
+          <dd>{{ reminderText(currentSession.reminderMinutesBefore) }}</dd>
+        </div>
+        <div>
+          <dt>Timezone</dt>
+          <dd>{{ currentSession.timezone }}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="assigned-content" aria-labelledby="assigned-content-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">ASSIGNED CONTENT</p>
+          <h2 id="assigned-content-title">Your session material</h2>
+        </div>
+      </div>
+
+      @if (content(); as item) {
+        <article class="content-row content-preview-card">
+          <div class="content-main" [class.has-thumbnail]="item.thumbnailUrl">
+            @if (item.thumbnailUrl) {
+              <div class="thumbnail-frame">
+                <img [src]="item.thumbnailUrl" [alt]="'Thumbnail for ' + item.title" />
+                @if (item.durationSeconds !== null) {
+                  <span class="duration-badge" aria-hidden="true">{{ formatDuration(item.durationSeconds) }}</span>
+                }
+              </div>
+            }
+            <div class="content-details">
+              <span class="type-marker" [class.video-marker]="item.type === 'YOUTUBE'">
+                {{ item.type === 'YOUTUBE' ? 'VIDEO' : 'ARTICLE' }}
+              </span>
+              <h3>{{ item.title }}</h3>
+              <p class="content-meta">
+                <span>{{ item.sourceName || item.url }}</span>
+                <span aria-hidden="true">·</span>
+                <span>Saved {{ formatDate(item.createdAt) }}</span>
+                @if (item.durationSeconds !== null) {
+                  <span aria-hidden="true">·</span>
+                  <span>{{ formatDuration(item.durationSeconds) }}</span>
+                } @else if (item.estimatedDurationMinutes !== null) {
+                  <span aria-hidden="true">·</span>
+                  <span>~{{ item.estimatedDurationMinutes }} min</span>
+                }
+              </p>
+            </div>
+            <div class="content-button">
+              <a class="open-link" [href]="item.url" target="_blank" rel="noopener noreferrer">
+                Open<span aria-hidden="true">↗</span>
+              </a>
+            </div>
+          </div>
+        </article>
+      } @else {
+        <div class="list-state empty-state">
+          <p class="empty-title">No content is assigned</p>
+          <p>This session currently has no video or article attached.</p>
+        </div>
+      }
+    </section>
+  }
+</section>

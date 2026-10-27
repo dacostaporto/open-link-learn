@@ -22,6 +22,10 @@ export class ContentApiService {
     return this.http.get<ContentPageResponse>('/api/v1/content', { params });
   }
 
+  getContentById(id: string): Observable<ContentResponse> {
+    return this.http.get<ContentResponse>(`/api/v1/content/${id}`);
+  }
+
   getArchive(query: ArchiveQuery): Observable<ArchivePageResponse> {
     let params = new HttpParams();
     if (query.search) params = params.set('search', query.search);

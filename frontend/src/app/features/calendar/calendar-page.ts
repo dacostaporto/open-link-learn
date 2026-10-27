@@ -1,8 +1,18 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  Injector,
+  OnInit,
+  ViewChild,
+  afterNextRender,
+  inject,
+  signal,
+} from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { FullCalendarModule } from '@fullcalendar/angular';
+import { FullCalendarComponent, FullCalendarModule } from '@fullcalendar/angular';
 import { CalendarOptions, DatesSetArg, EventClickArg, EventInput } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin, { DateClickArg } from '@fullcalendar/interaction';
@@ -21,6 +31,7 @@ import { SessionSeriesEditPanel } from './session-series-edit-panel/session-seri
 
 type SessionLifecycleAction = 'complete' | 'skip' | 'cancel';
 const SESSION_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const CALENDAR_SWIPE_THRESHOLD = 60;
 
 @Component({
   selector: 'app-calendar-page',
@@ -35,9 +46,16 @@ export class CalendarPage implements OnInit {
   private readonly settingsApi = inject(SettingsApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly injector = inject(Injector);
   private rangeSubscription: Subscription | null = null;
   private visibleRange: { from: string; to: string } | null = null;
   private notificationSessionId: string | null = null;
+  private pointerStart: { x: number; y: number; pointerId: number } | null = null;
+  private shouldFocusNextSession = true;
+
+  @ViewChild('calendar') private calendarComponent?: FullCalendarComponent;
+  @ViewChild('sessionDetail') private sessionDetail?: ElementRef<HTMLElement>;
+  @ViewChild('sessionComposer') private sessionComposer?: ElementRef<HTMLElement>;
 
   protected readonly timezone = signal<string | null>(null);
   protected readonly pendingContent = signal<ContentResponse[]>([]);
@@ -190,6 +208,7 @@ export class CalendarPage implements OnInit {
     this.isReassigningContent.set(false);
     this.formError.set(null);
     this.saveMessage.set(null);
+    this.focusSessionComposer();
   }
 
   protected reassignSelectedContent(): void {
@@ -200,6 +219,7 @@ export class CalendarPage implements OnInit {
     this.isReassigningContent.set(true);
     this.formError.set(null);
     this.saveMessage.set(null);
+    this.focusSessionComposer();
   }
 
   protected cancelEditingSession(): void {
@@ -301,6 +321,33 @@ export class CalendarPage implements OnInit {
     field?.focus();
   }
 
+  protected handleCalendarPointerDown(event: PointerEvent): void {
+    this.pointerStart = null;
+    if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
+    if (event.target instanceof Element && event.target.closest('button, input, select, textarea, [role="button"], .fc-toolbar')) return;
+    this.pointerStart = { x: event.clientX, y: event.clientY, pointerId: event.pointerId };
+  }
+
+  protected handleCalendarPointerUp(event: PointerEvent): void {
+    const start = this.pointerStart;
+    this.pointerStart = null;
+    if (!start || start.pointerId !== event.pointerId) return;
+
+    const horizontalDistance = event.clientX - start.x;
+    const verticalDistance = event.clientY - start.y;
+    if (Math.abs(horizontalDistance) < CALENDAR_SWIPE_THRESHOLD
+      || Math.abs(horizontalDistance) <= Math.abs(verticalDistance)) return;
+
+    const calendar = this.calendarComponent?.getApi();
+    if (!calendar) return;
+    if (horizontalDistance < 0) calendar.next();
+    else calendar.prev();
+  }
+
+  protected cancelCalendarPointer(): void {
+    this.pointerStart = null;
+  }
+
   private isCompactViewport(): boolean {
     return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
       && window.matchMedia('(max-width: 720px)').matches;
@@ -311,7 +358,9 @@ export class CalendarPage implements OnInit {
       plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin, luxonPlugin],
       initialView: this.isCompactViewport() ? 'timeGridDay' : 'timeGridWeek',
       timeZone: timezone,
-      height: 'auto',
+      contentHeight: 480,
+      expandRows: false,
+      scrollTime: '08:00:00',
       nowIndicator: true,
       selectable: false,
       dayMaxEvents: true,
@@ -333,8 +382,38 @@ export class CalendarPage implements OnInit {
   }
 
   private handleDatesSet(info: DatesSetArg): void {
+    this.shouldFocusNextSession = true;
     this.visibleRange = { from: info.start.toISOString(), to: info.end.toISOString() };
     this.loadSessions(this.visibleRange);
+  }
+
+  private focusCalendarOnNextSession(sessions: SessionResponse[]): void {
+    const calendar = this.calendarComponent?.getApi();
+    if (!calendar) return;
+
+    const now = Date.now();
+    const nextSession = sessions
+      .filter((session) =>
+        (session.status === 'PLANNED' || session.status === 'IN_PROGRESS')
+        && new Date(session.endsAt).getTime() > now,
+      )
+      .sort((left, right) => left.startsAt.localeCompare(right.startsAt))[0];
+    const timezone = nextSession?.timezone ?? this.timezone() ?? 'UTC';
+    const referenceDate = nextSession ? new Date(nextSession.startsAt) : new Date(now);
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: timezone,
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    }).formatToParts(referenceDate);
+    const hour = Number(parts.find((part) => part.type === 'hour')?.value ?? 8);
+    const minute = Number(parts.find((part) => part.type === 'minute')?.value ?? 0);
+    const scrollMinutes = Math.max(6 * 60, hour * 60 + minute - 2 * 60);
+    const scrollHour = Math.floor(scrollMinutes / 60);
+    const scrollMinute = scrollMinutes % 60;
+    calendar.scrollToTime(
+      `${String(scrollHour).padStart(2, '0')}:${String(scrollMinute).padStart(2, '0')}:00`,
+    );
   }
 
   private handleDateClick(info: DateClickArg): void {
@@ -359,11 +438,24 @@ export class CalendarPage implements OnInit {
     const sessionId = info.event.id;
     this.notificationSessionId = null;
     this.selectedSession.set(this.sessions().find((session) => session.id === sessionId) ?? null);
+    afterNextRender(() => {
+      const element = this.sessionDetail?.nativeElement;
+      element?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+      element?.focus({ preventScroll: true });
+    }, { injector: this.injector });
     this.isEditingSession.set(false);
     this.isReassigningContent.set(false);
     this.formError.set(null);
     this.lifecycleError.set(null);
     this.saveMessage.set(null);
+  }
+
+  private focusSessionComposer(): void {
+    afterNextRender(() => {
+      const element = this.sessionComposer?.nativeElement;
+      element?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+      element?.focus({ preventScroll: true });
+    }, { injector: this.injector });
   }
 
   private toLocalDateTime(date: Date, timezone: string): { date: string; time: string } {
@@ -400,6 +492,10 @@ export class CalendarPage implements OnInit {
         next: (result) => {
           this.sessions.set(result.items);
           this.updateCalendarEvents(result.items);
+          if (this.shouldFocusNextSession) {
+            this.shouldFocusNextSession = false;
+            this.focusCalendarOnNextSession(result.items);
+          }
           const notificationSession = this.sessions().find(
             (session) => session.id === this.notificationSessionId,
           );

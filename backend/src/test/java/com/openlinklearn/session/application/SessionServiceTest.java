@@ -49,6 +49,26 @@ class SessionServiceTest {
             sessionRepository, contentRepository, settingsService, assignmentCutoffJobService, reminderJobService);
 
     @Test
+    void getsSessionByIdWithinOwnerContext() {
+        LearningSession session = plannedSession(content(UUID.randomUUID()));
+        when(sessionRepository.findByIdAndOwnerId(session.getId(), ownerId())).thenReturn(Optional.of(session));
+
+        SessionResponse response = sessionService.getSessionById(session.getId());
+
+        assertEquals(session.getId(), response.id());
+        assertEquals("Lesson", response.content().title());
+    }
+
+    @Test
+    void getSessionByIdReturnsNotFoundWhenSessionIsOutsideOwnerContext() {
+        UUID sessionId = UUID.randomUUID();
+        when(sessionRepository.findByIdAndOwnerId(sessionId, ownerId())).thenReturn(Optional.empty());
+
+        assertEquals(HttpStatus.NOT_FOUND, assertThrows(ResponseStatusException.class,
+                () -> sessionService.getSessionById(sessionId)).getStatusCode());
+    }
+
+    @Test
     void createsSessionUsingConfiguredDefaultsAndCalculatesEndTime() {
         when(settingsService.getSettings()).thenReturn(new SettingsResponse("Europe/Madrid", 10, 30, 90));
         when(sessionRepository.saveAndFlush(any(LearningSession.class))).thenAnswer(invocation -> invocation.getArgument(0));

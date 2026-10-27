@@ -75,6 +75,14 @@ describe('SessionApiService', () => {
     httpRequest.flush({});
   });
 
+  it('gets one session by ID', () => {
+    service.getSessionById('session-1').subscribe();
+
+    const httpRequest = httpTesting.expectOne('/api/v1/sessions/session-1');
+    expect(httpRequest.request.method).toBe('GET');
+    httpRequest.flush({});
+  });
+
   it('loads sessions by an exclusive instant range', () => {
     service.getSessions('2026-10-26T00:00:00Z', '2026-10-27T00:00:00Z').subscribe();
 

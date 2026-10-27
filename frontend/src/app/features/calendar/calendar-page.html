@@ -28,7 +28,13 @@
     <p class="calendar-state" role="status">Loading your planner...</p>
   } @else if (timezone()) {
     <div class="calendar-layout">
-      <section class="session-composer window win-blue" aria-labelledby="composer-title">
+      <section
+        #sessionComposer
+        class="session-composer window win-blue"
+        [class.is-editing]="isEditingSession()"
+        tabindex="-1"
+        aria-labelledby="composer-title"
+      >
         <div class="composer-heading">
           <p class="eyebrow">ONE-OFF SESSION</p>
           <h2 id="composer-title">{{ isReassigningContent() ? 'Reassign content' : isEditingSession() ? 'Edit study slot' : 'Make a study slot' }}</h2>
@@ -128,9 +134,16 @@
         @if (isLoadingSessions() && sessions().length === 0) {
           <p class="calendar-state" role="status">Loading sessions...</p>
         }
-        <full-calendar [options]="calendarOptions!" />
+        <div
+          class="calendar-gesture-surface"
+          (pointerdown)="handleCalendarPointerDown($event)"
+          (pointerup)="handleCalendarPointerUp($event)"
+          (pointercancel)="cancelCalendarPointer()"
+        >
+          <full-calendar #calendar [options]="calendarOptions!" />
+        </div>
         @if (selectedSession(); as selected) {
-          <div class="session-detail" aria-live="polite">
+          <div #sessionDetail class="session-detail" tabindex="-1" aria-live="polite">
             <div>
               <p class="detail-status">{{ selected.status.replace('_', ' ') }}</p>
               <h2>{{ selected.content?.title ?? 'Unassigned session' }}</h2>
@@ -147,7 +160,7 @@
             @if (!isEditingSession()) {
               <div class="session-detail-actions">
                 @if (selected.content; as content) {
-                  <a [href]="content.url" target="_blank" rel="noopener noreferrer" aria-label="Open assigned content in a new tab">↗</a>
+                  <a [href]="content.url" target="_blank" rel="noopener noreferrer" aria-label="Open assigned content in a new tab">Open↗</a>
                 }
                 @if (selected.status === 'PLANNED' || selected.status === 'IN_PROGRESS') {
                   <button class="edit-session-button" type="button" data-action="complete" [disabled]="pendingLifecycleAction() !== null || isCancellingSeries()" (click)="performLifecycleAction('complete')">

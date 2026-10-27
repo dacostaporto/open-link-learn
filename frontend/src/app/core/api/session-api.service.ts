@@ -27,6 +27,10 @@ export class SessionApiService {
     return this.http.post<SessionResponse>(`/api/v1/sessions/${id}/cancel`, {});
   }
 
+  getSessionById(id: string): Observable<SessionResponse> {
+    return this.http.get<SessionResponse>(`/api/v1/sessions/${id}`);
+  }
+
   getSessions(from: string, to: string): Observable<SessionListResponse> {
     const params = new HttpParams().set('from', from).set('to', to);
     return this.http.get<SessionListResponse>('/api/v1/sessions', { params });

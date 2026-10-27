@@ -28,6 +28,139 @@ describe('CalendarPage', () => {
     vi.restoreAllMocks();
   });
 
+  it('navigates to the adjacent calendar range on horizontal touch and mouse swipes', () => {
+    const fixture = createCalendar();
+    const page = fixture.componentInstance as any;
+    const previous = vi.fn();
+    const next = vi.fn();
+    page.calendarComponent = { getApi: () => ({ prev: previous, next }) };
+    const surface = fixture.nativeElement.querySelector('.calendar-gesture-surface') as HTMLElement;
+
+    page.handleCalendarPointerDown(pointerEvent(surface, 240, 100, 'touch'));
+    page.handleCalendarPointerUp(pointerEvent(surface, 150, 110, 'touch'));
+    page.handleCalendarPointerDown(pointerEvent(surface, 150, 100, 'mouse'));
+    page.handleCalendarPointerUp(pointerEvent(surface, 240, 110, 'mouse'));
+
+    expect(next).toHaveBeenCalledOnce();
+    expect(previous).toHaveBeenCalledOnce();
+  });
+
+  it('ignores vertical movement and gestures started on calendar controls', () => {
+    const fixture = createCalendar();
+    const page = fixture.componentInstance as any;
+    const previous = vi.fn();
+    const next = vi.fn();
+    page.calendarComponent = { getApi: () => ({ prev: previous, next }) };
+    const surface = fixture.nativeElement.querySelector('.calendar-gesture-surface') as HTMLElement;
+    const control = document.createElement('button');
+
+    page.handleCalendarPointerDown(pointerEvent(surface, 100, 100, 'touch'));
+    page.handleCalendarPointerUp(pointerEvent(surface, 180, 190, 'touch'));
+    page.handleCalendarPointerDown(pointerEvent(control, 240, 100, 'mouse'));
+    page.handleCalendarPointerUp(pointerEvent(surface, 150, 110, 'mouse'));
+
+    expect(previous).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('limits the calendar height and scrolls to two hours before the next active session', () => {
+    const fixture = createCalendar();
+    const page = fixture.componentInstance as any;
+    const scrollToTime = vi.fn();
+    page.calendarComponent = { getApi: () => ({ scrollToTime }) };
+
+    page.focusCalendarOnNextSession([
+      {
+        ...plannedSession,
+        startsAt: '2099-10-28T07:00:00Z',
+        endsAt: '2099-10-28T07:30:00Z',
+        status: 'CANCELLED',
+      },
+      {
+        ...plannedSession,
+        startsAt: '2099-10-28T09:00:00Z',
+        endsAt: '2099-10-28T09:30:00Z',
+      },
+      {
+        ...plannedSession,
+        startsAt: '2099-10-28T13:00:00Z',
+        endsAt: '2099-10-28T13:30:00Z',
+      },
+    ]);
+
+    expect(page.calendarOptions.contentHeight).toBe(480);
+    expect(page.calendarOptions.expandRows).toBe(false);
+    expect(scrollToTime).toHaveBeenCalledWith('08:00:00');
+  });
+
+  it('scrolls to and focuses the session details when a calendar event is selected', async () => {
+    const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    });
+
+    try {
+      const fixture = createCalendar();
+      const page = fixture.componentInstance as any;
+      page.handleEventClick({ event: { id: plannedSession.id } });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const detail = fixture.nativeElement.querySelector('.session-detail') as HTMLElement;
+      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' });
+      expect(document.activeElement).toBe(detail);
+    } finally {
+      if (originalScrollIntoView) {
+        Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+          configurable: true,
+          value: originalScrollIntoView,
+        });
+      } else {
+        Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView');
+      }
+    }
+  });
+
+  it('scrolls to and highlights the composer when editing a session', async () => {
+    const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    });
+
+    try {
+      const fixture = createCalendar();
+      const page = fixture.componentInstance as any;
+      page.selectedSession.set(plannedSession);
+      fixture.detectChanges();
+
+      buttonWithText(fixture.nativeElement, 'Edit session').click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const composer = fixture.nativeElement.querySelector('.session-composer') as HTMLElement;
+      expect(composer.classList).toContain('is-editing');
+      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' });
+      expect(document.activeElement).toBe(composer);
+
+      (fixture.nativeElement.querySelector('.session-composer .secondary-button') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(composer.classList).not.toContain('is-editing');
+    } finally {
+      if (originalScrollIntoView) {
+        Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+          configurable: true,
+          value: originalScrollIntoView,
+        });
+      } else {
+        Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView');
+      }
+    }
+  });
+
   it('creates a one-off session and shows the saved session', () => {
     const fixture = createCalendar([pendingItem]);
     const element = fixture.nativeElement as HTMLElement;
@@ -534,6 +667,23 @@ function setInput(element: HTMLElement, selector: string, value: string): void {
   const input = element.querySelector(selector) as HTMLInputElement;
   input.value = value;
   input.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function pointerEvent(
+  target: EventTarget,
+  clientX: number,
+  clientY: number,
+  pointerType: string,
+): PointerEvent {
+  return {
+    target,
+    clientX,
+    clientY,
+    pointerId: 1,
+    pointerType,
+    isPrimary: true,
+    button: 0,
+  } as PointerEvent;
 }
 
 function createCalendar(contentItems: ContentResponse[] = []) {

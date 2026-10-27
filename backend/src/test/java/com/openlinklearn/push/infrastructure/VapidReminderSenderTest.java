@@ -76,8 +76,8 @@ class VapidReminderSenderTest {
         assertEquals(600, provider.sent.get(0).ttlSeconds());
         JsonNode payload = new ObjectMapper().readTree(provider.sent.get(0).payload());
         assertEquals(4, payload.size());
-        assertEquals("English Learning", payload.get("title").asText());
-        assertEquals("Your learning session starts in 10 minutes.", payload.get("body").asText());
+        assertEquals("Open Link Learn", payload.get("title").asText());
+        assertEquals("Your planned session starts in 10 minutes.", payload.get("body").asText());
         assertEquals("/calendar?sessionId=" + SESSION_ID, payload.get("url").asText());
         assertEquals(SESSION_ID.toString(), payload.get("sessionId").asText());
     }

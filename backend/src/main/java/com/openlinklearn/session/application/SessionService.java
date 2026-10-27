@@ -265,6 +265,13 @@ public class SessionService {
     }
 
     @Transactional(readOnly = true)
+    public SessionResponse getSessionById(UUID sessionId) {
+        LearningSession session = sessionRepository.findByIdAndOwnerId(sessionId, LOCAL_PROFILE_ID)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Session was not found."));
+        return toResponse(session);
+    }
+
+    @Transactional(readOnly = true)
     public SessionListResponse getSessions(Instant from, Instant to) {
         if (from == null || to == null || !from.isBefore(to)) {
             throw badRequest("A valid time range with from before to is required.");

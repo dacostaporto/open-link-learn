@@ -125,7 +125,7 @@
                   {{ savingEdit() ? 'Saving...' : 'Save changes' }}
                 </button>
               } @else {
-                <button class="text-button edit-button" type="button" (click)="startEditing(item)" [disabled]="editingContentId() !== null" [attr.aria-label]="'Edit details for ' + item.title">Edit details</button>
+                <button class="text-button edit-button" type="button" (click)="startEditing(item)" [disabled]="editingContentId() !== null" [attr.aria-label]="'Edit details for ' + item.title">Edit</button>
                 <button class="text-button complete-button" type="button" (click)="completeItem(item)" [disabled]="completingContentId() !== null || editingContentId() !== null" [attr.aria-label]="'Mark ' + item.title + ' as complete'">Complete</button>
                 <a class="open-link" [href]="item.url" target="_blank" rel="noopener noreferrer" [attr.aria-label]="'Open ' + item.title + ' in a new tab'">
                   Open <span aria-hidden="true">↗</span>

@@ -25,6 +25,10 @@
   --pad: 14px;
 }
 
+.calendar-gesture-surface {
+  touch-action: pan-y;
+}
+
 .jump-to-form {
   display: none;
   width: 100%;
@@ -34,6 +38,11 @@
 .session-composer form {
   display: grid;
   gap: 12px;
+}
+
+.session-composer.is-editing {
+  outline: 3px solid var(--mustard);
+  outline-offset: 2px;
 }
 
 .session-composer label {
@@ -124,7 +133,7 @@
 
 .session-detail-actions a {
   display: grid;
-  width: var(--tap);
+  width: auto;
   height: var(--tap);
   place-items: center;
   padding: 0;

@@ -6,7 +6,7 @@ function validSessionId(value) {
 
 function sessionRoute(sessionId) {
   const id = validSessionId(sessionId);
-  return id ? `/calendar?sessionId=${encodeURIComponent(id)}` : '/calendar';
+  return id ? `/preview-content/${encodeURIComponent(id)}` : '/calendar';
 }
 
 function safeText(value, fallback, limit) {

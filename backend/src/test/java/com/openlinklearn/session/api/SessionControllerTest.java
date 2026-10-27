@@ -78,6 +78,21 @@ class SessionControllerTest {
     }
 
     @Test
+    void getsOneSessionById() throws Exception {
+        UUID id = UUID.fromString("a51a8fbf-20dd-4bce-bcc8-44a4ed4ea290");
+        when(sessionService.getSessionById(id)).thenReturn(new SessionResponse(
+                id, null, Instant.parse("2026-10-26T06:30:00Z"), Instant.parse("2026-10-26T07:00:00Z"),
+                "Europe/Madrid", null, SessionStatus.PLANNED, 5, 30, null
+        ));
+
+        mockMvc.perform(get("/api/v1/sessions/{id}", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id.toString()))
+                .andExpect(jsonPath("$.timezone").value("Europe/Madrid"))
+                .andExpect(jsonPath("$.reminderMinutesBefore").value(5));
+    }
+
+    @Test
     void updatesSessionThroughPatchEndpoint() throws Exception {
         UUID id = UUID.fromString("a51a8fbf-20dd-4bce-bcc8-44a4ed4ea290");
         when(sessionService.updateSession(eq(id), any(UpdateSessionRequest.class))).thenReturn(new SessionResponse(

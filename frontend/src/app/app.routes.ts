@@ -13,6 +13,11 @@ export const routes: Routes = [
 			import('./features/backlog/backlog-page').then((module) => module.BacklogPage),
 	},
 	{
+		path: 'preview-content/:sessionId',
+		loadComponent: () =>
+			import('./features/backlog/preview-content-page/preview-content-page').then((module) => module.PreviewContentPage),
+	},
+	{
 		path: 'calendar/series/new',
 		loadComponent: () =>
 			import('./features/calendar/session-series-create-page/session-series-create-page').then((module) => module.SessionSeriesCreatePage),

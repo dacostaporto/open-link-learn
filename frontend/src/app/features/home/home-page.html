@@ -62,11 +62,6 @@
             <p class="eyebrow">UP AHEAD</p>
             <h2 id="next-session-heading">Next session</h2>
           </div>
-          @if (settings(); as preferences) {
-            <span class="timezone-label">{{ preferences.timezone }}</span>
-          } @else {
-            <span class="timezone-label">UTC</span>
-          }
         </div>
         @if (summary.nextSession; as nextSession) {
           <h3>{{ nextSession.title }}</h3>

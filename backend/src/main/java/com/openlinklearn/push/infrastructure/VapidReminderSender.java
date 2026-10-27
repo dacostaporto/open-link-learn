@@ -21,7 +21,7 @@ public class VapidReminderSender implements ReminderSender {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(VapidReminderSender.class);
     private static final int MAX_TTL_SECONDS = 24 * 60 * 60;
-    private static final String TITLE = "English Learning";
+    private static final String TITLE = "Open Link Learn";
 
     private final WebPushProvider provider;
     private final PushSubscriptionRepository subscriptionRepository;
@@ -125,8 +125,8 @@ public class VapidReminderSender implements ReminderSender {
 
     private String createPayload(ReminderDelivery delivery) {
         String body = delivery.minutesBefore() == 0
-                ? "Your learning session starts now."
-                : "Your learning session starts in " + delivery.minutesBefore()
+                ? "Your planned session starts now."
+                : "Your planned session starts in " + delivery.minutesBefore()
                         + (delivery.minutesBefore() == 1 ? " minute." : " minutes.");
         ReminderPayload payload = new ReminderPayload(
                 TITLE,
