@@ -91,13 +91,16 @@ public class VapidReminderSender implements ReminderSender {
     }
 
     private void logSubscriptionFailure(UUID subscriptionId, WebPushProviderException exception) {
-        LOGGER.atWarn()
+        var event = LOGGER.atWarn()
                 .addKeyValue("event", "push_subscription_delivery_failure")
                 .addKeyValue("subscription_id", subscriptionId)
                 .addKeyValue("provider_status_code", exception.getStatusCode())
                 .addKeyValue("expired", exception.isExpired())
-                .addKeyValue("retryable", exception.isRetryable())
-                .log("Push subscription delivery failed");
+                .addKeyValue("retryable", exception.isRetryable());
+        if (exception.getProviderReason() != null) {
+            event.addKeyValue("provider_reason", exception.getProviderReason());
+        }
+        event.log("Push subscription delivery failed");
     }
 
     private void logDeliverySummary(

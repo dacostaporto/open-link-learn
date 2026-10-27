@@ -15,8 +15,8 @@ import java.time.Clock;
 public class PushDeliveryConfiguration {
 
     @Bean
-    WebPushProvider webPushProvider(VapidProperties properties) {
-        return new VapidWebPushProvider(properties);
+    WebPushProvider webPushProvider(VapidProperties properties, ObjectMapper objectMapper) {
+        return new VapidWebPushProvider(properties, objectMapper);
     }
 
     @Bean

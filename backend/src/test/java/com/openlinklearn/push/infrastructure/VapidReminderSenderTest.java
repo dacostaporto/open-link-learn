@@ -96,13 +96,15 @@ class VapidReminderSenderTest {
 
     @Test
     void logsSafeSubscriptionIdAndProviderStatusForPermanentFailure(CapturedOutput output) {
-        provider.failure = new WebPushProviderException(403, false, false);
+        provider.failure = new WebPushProviderException(
+                403, false, false, "PERMISSION_DENIED; THIRD_PARTY_AUTH_ERROR");
 
         assertThrows(ReminderDeliveryException.class, () -> sender.send(delivery(10, NOW.plusSeconds(600))));
 
         assertTrue(output.getOut().contains("push_subscription_delivery_failure"));
         assertTrue(output.getOut().contains(subscription.getId().toString()));
-        assertTrue(output.getOut().contains("provider_status_code=\"403\""));
+        assertTrue(output.getOut().matches("(?s).*provider_status_code.*403.*"));
+        assertTrue(output.getOut().contains("THIRD_PARTY_AUTH_ERROR"));
         assertFalse(output.getOut().contains(ENDPOINT));
         assertFalse(output.getOut().contains(P256DH));
         assertFalse(output.getOut().contains(AUTH));
