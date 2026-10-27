@@ -94,6 +94,20 @@ class VapidReminderSenderTest {
         verify(subscriptionService, never()).deactivateExpired(subscription.getId());
     }
 
+    @Test
+    void logsSafeSubscriptionIdAndProviderStatusForPermanentFailure(CapturedOutput output) {
+        provider.failure = new WebPushProviderException(403, false, false);
+
+        assertThrows(ReminderDeliveryException.class, () -> sender.send(delivery(10, NOW.plusSeconds(600))));
+
+        assertTrue(output.getOut().contains("push_subscription_delivery_failure"));
+        assertTrue(output.getOut().contains(subscription.getId().toString()));
+        assertTrue(output.getOut().contains("provider_status_code=\"403\""));
+        assertFalse(output.getOut().contains(ENDPOINT));
+        assertFalse(output.getOut().contains(P256DH));
+        assertFalse(output.getOut().contains(AUTH));
+    }
+
     @ParameterizedTest
     @ValueSource(ints = {404, 410})
     void deactivatesDefinitivelyExpiredSubscriptionWithoutRetry(int statusCode) {

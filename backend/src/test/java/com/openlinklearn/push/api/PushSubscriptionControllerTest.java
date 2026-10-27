@@ -37,6 +37,7 @@ class PushSubscriptionControllerTest {
 
     @Test
     void exposesOnlyConfiguredVapidPublicKey() throws Exception {
+        when(vapidProperties.enabled()).thenReturn(true);
         when(vapidProperties.vapidPublicKey()).thenReturn("public-key-value");
 
         mockMvc.perform(get("/api/v1/push/vapid-public-key"))
@@ -46,7 +47,17 @@ class PushSubscriptionControllerTest {
     }
 
     @Test
+    void reportsUnavailableWhenPushDeliveryIsDisabled() throws Exception {
+        when(vapidProperties.enabled()).thenReturn(false);
+        when(vapidProperties.vapidPublicKey()).thenReturn("public-key-value");
+
+        mockMvc.perform(get("/api/v1/push/vapid-public-key"))
+                .andExpect(status().isServiceUnavailable());
+    }
+
+    @Test
     void reportsUnavailableWhenVapidPublicKeyIsNotConfigured() throws Exception {
+        when(vapidProperties.enabled()).thenReturn(true);
         when(vapidProperties.vapidPublicKey()).thenReturn("");
 
         mockMvc.perform(get("/api/v1/push/vapid-public-key"))

@@ -56,6 +56,11 @@
       >
         {{ push.busy() ? 'Working...' : push.state().operation === 'disable' ? 'Retry removal' : 'Retry enable' }}
       </button>
+      @if (push.state().hasSubscription) {
+        <button id="remove-push" class="push-button secondary-button" type="button" [disabled]="push.busy()" (click)="disable()">
+          {{ push.busy() ? 'Removing...' : 'Remove this browser' }}
+        </button>
+      }
     } @else {
       <button id="enable-push" class="push-button" type="button" [disabled]="push.busy()" (click)="enable()">
         {{ push.busy() ? 'Enabling...' : 'Enable push' }}

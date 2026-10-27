@@ -141,13 +141,14 @@ export class PushSettingsService {
 
     if (stored?.status === 'enabled' && permission === 'granted') {
       try {
+        await this.api.getVapidPublicKey();
         if (await this.browser.getSubscription()) {
           this.setState('enabled', stored.subscriptionId);
         } else {
-          this.setState('error', stored.subscriptionId, 'disable');
+          this.setState('error', stored.subscriptionId, 'enable');
         }
       } catch {
-        this.setState('error', stored.subscriptionId, 'disable');
+        this.setState('error', stored.subscriptionId, 'enable');
       }
       return;
     }
@@ -178,9 +179,9 @@ export class PushSettingsService {
         return;
       }
 
+      const response = await this.api.getVapidPublicKey();
       let subscription = await this.browser.getSubscription();
       if (!subscription) {
-        const response = await this.api.getVapidPublicKey();
         subscription = await this.browser.subscribe(decodeApplicationServerKey(response.publicKey));
         newSubscription = subscription;
       }
@@ -250,7 +251,7 @@ export class PushSettingsService {
       case 'error':
         return operation === 'disable'
           ? 'Push could not be fully removed. Retry to finish removing this browser.'
-          : 'Push could not be enabled. Check your connection and VAPID setup, then retry.';
+          : 'Push delivery is unavailable. Check the server VAPID settings and connection, then retry.';
       default:
         return 'Push reminders are off on this browser.';
     }

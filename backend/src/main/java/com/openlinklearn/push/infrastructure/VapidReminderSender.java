@@ -67,6 +67,7 @@ public class VapidReminderSender implements ReminderSender {
                 provider.send(recipient, payload, ttlSeconds);
                 deliveredCount++;
             } catch (WebPushProviderException exception) {
+                logSubscriptionFailure(subscription.getId(), exception);
                 if (exception.isExpired()) {
                     subscriptionService.deactivateExpired(subscription.getId());
                     expiredCount++;
@@ -87,6 +88,16 @@ public class VapidReminderSender implements ReminderSender {
         if (retryableFailureCount > 0) {
             throw new ReminderDeliveryException(true, "Web Push provider is temporarily unavailable.");
         }
+    }
+
+    private void logSubscriptionFailure(UUID subscriptionId, WebPushProviderException exception) {
+        LOGGER.atWarn()
+                .addKeyValue("event", "push_subscription_delivery_failure")
+                .addKeyValue("subscription_id", subscriptionId)
+                .addKeyValue("provider_status_code", exception.getStatusCode())
+                .addKeyValue("expired", exception.isExpired())
+                .addKeyValue("retryable", exception.isRetryable())
+                .log("Push subscription delivery failed");
     }
 
     private void logDeliverySummary(

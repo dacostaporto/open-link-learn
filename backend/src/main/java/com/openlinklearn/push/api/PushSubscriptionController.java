@@ -47,7 +47,9 @@ public class PushSubscriptionController {
             @ApiResponse(responseCode = "503", description = "Push is not configured", content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ApiProblem.class)))
     })
     public VapidPublicKeyResponse getVapidPublicKey() {
-        if (vapidProperties.vapidPublicKey() == null || vapidProperties.vapidPublicKey().isBlank()) {
+        if (!vapidProperties.enabled()
+                || vapidProperties.vapidPublicKey() == null
+                || vapidProperties.vapidPublicKey().isBlank()) {
             throw new org.springframework.web.server.ResponseStatusException(
                     org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE,
                     "Web Push is not configured.");

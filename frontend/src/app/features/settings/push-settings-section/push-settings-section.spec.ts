@@ -114,6 +114,23 @@ describe('PushSettingsSection', () => {
     expect(api.subscribe).not.toHaveBeenCalled();
   });
 
+  it('checks server push delivery before treating a saved subscription as enabled', async () => {
+    storedState = { status: 'enabled', subscriptionId };
+    browserState.permission = 'granted';
+    browserState.subscription = createSubscription(unsubscribeBrowser);
+    api.getVapidPublicKey = vi.fn(async () => {
+      throw new Error('Web Push is disabled on the server.');
+    });
+    const fixture = createPage();
+    const service = TestBed.inject(PushSettingsService);
+    await vi.waitFor(() => expect(service.state().status).toBe('error'));
+    fixture.detectChanges();
+
+    expect(service.state().message).toContain('server VAPID settings');
+    expect(service.state().hasSubscription).toBe(true);
+    expect((fixture.nativeElement as HTMLElement).querySelector('#remove-push')).not.toBeNull();
+  });
+
   it('does not throw or offer enable controls when browser push is unsupported', async () => {
     browserState.supported = false;
     const fixture = createPage();
@@ -141,7 +158,7 @@ describe('PushSettingsSection', () => {
     expect(storedState?.status).toBe('error');
     expect(service.state().message).not.toContain('private-endpoint');
     expect(service.state().message).not.toContain('browser-auth-secret');
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Check your connection and VAPID setup');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Check the server VAPID settings and connection');
   });
 
   it('keeps the server id and browser subscription when removal fails so removal can be retried', async () => {
@@ -154,6 +171,7 @@ describe('PushSettingsSection', () => {
     const fixture = createPage();
     const service = TestBed.inject(PushSettingsService);
     await service.initialize();
+    await vi.waitFor(() => expect(service.state().status).toBe('enabled'));
     fixture.detectChanges();
     (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('#disable-push')!.click();
     await vi.waitFor(() => expect(service.state().status).toBe('error'));
