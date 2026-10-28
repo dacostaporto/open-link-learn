@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(value = ContentController.class, properties = "openlinklearn.cors.allowed-origin=http://localhost:4200,http://localhost:18081")
+@WebMvcTest(value = ContentController.class, properties = "openlinklearn.cors.allowed-origin=http://localhost:4200,http://localhost:18081,moz-extension://*")
 @Import(ApiCorsConfiguration.class)
 class ContentControllerTest {
 
@@ -61,6 +61,17 @@ class ContentControllerTest {
                                 .andExpect(status().isOk())
                                 .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:18081"))
                                 .andExpect(header().doesNotExist("Access-Control-Allow-Credentials"));
+        }
+
+        @Test
+        void allowsFirefoxExtensionOriginsWithAnyId() throws Exception {
+                String extensionOrigin = "moz-extension://6f6a286f-1548-4bea-9e97-0a849516706d";
+
+                mockMvc.perform(options("/api/v1/content")
+                                                .header("Origin", extensionOrigin)
+                                                .header("Access-Control-Request-Method", "GET"))
+                                .andExpect(status().isOk())
+                                .andExpect(header().string("Access-Control-Allow-Origin", extensionOrigin));
         }
 
         @Test

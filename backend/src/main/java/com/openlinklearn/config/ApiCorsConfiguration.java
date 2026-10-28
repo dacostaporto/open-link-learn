@@ -10,12 +10,12 @@ import java.util.Arrays;
 @Configuration
 public class ApiCorsConfiguration implements WebMvcConfigurer {
 
-    private final String[] allowedOrigins;
+    private final String[] allowedOriginPatterns;
 
     public ApiCorsConfiguration(
             @Value("${openlinklearn.cors.allowed-origin:http://localhost:4200}") String allowedOrigins
     ) {
-        this.allowedOrigins = Arrays.stream(allowedOrigins.split(","))
+        this.allowedOriginPatterns = Arrays.stream(allowedOrigins.split(","))
                 .map(String::trim)
                 .filter(origin -> !origin.isEmpty())
                 .toArray(String[]::new);
@@ -24,7 +24,7 @@ public class ApiCorsConfiguration implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
-                .allowedOrigins(allowedOrigins)
+                .allowedOriginPatterns(allowedOriginPatterns)
                 .allowedMethods("GET", "POST", "PATCH", "DELETE")
                 .allowedHeaders("Content-Type")
                 .allowCredentials(false)

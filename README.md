@@ -63,7 +63,10 @@ only appropriate on a trusted private network with network-level access control;
 use HTTPS for hostnames and devices, and do not treat CORS as access control.
 The API allows browser requests only from configured `APP_ALLOWED_ORIGIN` values
 (default `http://localhost:4200` for frontend development); the Compose web app
-uses same-origin requests through Nginx. CORS is not an access-control system.
+uses same-origin requests through Nginx. Values can be exact origins or origin
+patterns, such as `moz-extension://*` when a Firefox extension ID may change.
+That pattern allows requests from any Firefox extension, so use it only if
+needed. CORS is not an access-control system.
 
 The Compose healthchecks are available with `docker compose ps`. For
 development outside containers, `docker compose up -d db` starts only
